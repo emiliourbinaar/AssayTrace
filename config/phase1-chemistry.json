@@ -1,0 +1,17 @@
+{
+  "revision": "phase1-chemistry-v1",
+  "removable_fragments": ["O", "[Cl-]", "[Br-]", "[I-]", "[Li+]", "[Na+]", "[K+]", "[Mg+2]", "[Ca+2]"],
+  "allowed_elements": ["H", "B", "C", "N", "O", "F", "P", "S", "Cl", "Br", "I"],
+  "parent_policy": "exactly_one_remaining_component_containing_carbon",
+  "identity_policy": "canonical_isomeric_parent_preserving_isotopes_without_tautomer_merging",
+  "normalization_policy": "sanitize_remove_hs_protonation_only_uncharge_assign_stereo",
+  "scaffold_policy": "stereo_free_non_generic_murcko_preserving_isotopes_or_ACYCLIC",
+  "uncharger": {"canonicalOrder": true, "force": false, "protonationOnly": true},
+  "tautomer": {
+    "max_tautomers": 1000,
+    "max_transforms": 1000,
+    "remove_bond_stereo": true,
+    "remove_sp3_stereo": true,
+    "reassign_stereo": false
+  }
+}

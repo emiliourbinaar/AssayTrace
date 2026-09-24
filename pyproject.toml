@@ -1,0 +1,17 @@
+[project]
+name = "assaytrace"
+version = "0.1.0"
+description = "Reproducible bioactivity feasibility profiling"
+requires-python = ">=3.12,<3.13"
+dependencies = ["rdkit==2026.3.6"]
+
+[dependency-groups]
+dev = ["pytest", "tdd-guard-pytest"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+tdd_guard_project_root = "/workspace"
+
+[tool.uv]
+package = false
