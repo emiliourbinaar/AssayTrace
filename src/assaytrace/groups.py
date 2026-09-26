@@ -1,5 +1,6 @@
 from collections import defaultdict
 from hashlib import sha256
+from fractions import Fraction
 
 from assaytrace.artifacts import canonical_json
 
@@ -131,3 +132,24 @@ def build_groups(molecules, contract_digest, *, selected_identity_ids=None):
             "quarantined_components": quarantine,
             "evidence_edges": sorted(evidence_edges, key=canonical_json),
             "unresolved_identities": sorted(unresolved)}
+def allocate_groups(identity_to_group):
+    groups = defaultdict(list)
+    for identity, group in identity_to_group.items():
+        groups[group].append(identity)
+    targets = {"train": Fraction(7, 10) * len(identity_to_group),
+               "validation": Fraction(3, 20) * len(identity_to_group),
+               "test": Fraction(3, 20) * len(identity_to_group)}
+    counts = dict.fromkeys(targets, 0)
+    assignment = {}
+    for group in sorted(groups, key=lambda key: (-len(groups[key]),
+                                                 sha256(canonical_json([17, key])).hexdigest(), key)):
+        size = len(groups[group])
+        partition = min(targets, key=lambda candidate: sum(
+            (counts[name] + (size if name == candidate else 0) - targets[name]) ** 2
+            for name in targets))
+        assignment[group] = partition
+        counts[partition] += size
+    return {"group_to_partition": assignment, "counts": counts,
+            "empty_partitions": [name for name, count in counts.items() if count == 0],
+            "target_counts": {name: str(value) for name, value in targets.items()},
+            "identity_to_partition": {identity: assignment[group] for identity, group in sorted(identity_to_group.items())}}

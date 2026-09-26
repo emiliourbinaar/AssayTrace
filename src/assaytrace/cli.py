@@ -1,4 +1,5 @@
 import argparse
+import json
 from hashlib import sha256
 from pathlib import Path
 
@@ -7,6 +8,7 @@ from assaytrace.extract import extract_synthetic
 from assaytrace.profile import numerical_profile, molecular_profile
 from assaytrace.chemistry import chemistry_contract
 from assaytrace.groups import build_groups
+from assaytrace.review import publish_reviews
 
 
 def main(argv=None):
@@ -16,7 +18,18 @@ def main(argv=None):
     profile.add_argument("--source", type=Path, required=True)
     profile.add_argument("--synthetic", action="store_true", required=True)
     profile.add_argument("--output", type=Path, required=True)
+    review = commands.add_parser("review-import")
+    review.add_argument("--selection", type=Path, required=True)
+    review.add_argument("--ledger", type=Path, required=True)
+    review.add_argument("--output", type=Path, required=True)
     args = parser.parse_args(argv)
+    if args.command == "review-import":
+        queue = json.loads(args.selection.read_bytes())
+        ledger = json.loads(args.ledger.read_bytes())
+        result = publish_reviews(args.output, queue, ledger["decisions"],
+                                 intervals=ledger["active_intervals"], stop=ledger.get("stop"))
+        print(canonical_json(result).decode("utf-8"), end="")
+        return 0
     extracted = extract_synthetic(args.source)
     if extracted is None:
         return 1

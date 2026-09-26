@@ -238,3 +238,104 @@ or a confirmed usable population. Full offline validation: **150 passed, 1 skipp
 in 18.82s**. The skipped test is the separately exercised real-source check.
 Immutable rerun/content-comparison and separate execution-record tests pass with
 the additional artifacts. Automated TDD write blocking remains unverified.
+
+### 2026-09-26 — Review selection, eligibility and resumable imports
+
+Explicit red/green cycles established frozen high-coverage/stratified interleaving,
+unknown year/format strata, metadata and selection digests, and duplicate assay
+rejection. Local eligibility checks cover target and assay metadata, linked
+human-confirmation state, numerical exclusions, structure resolution and record
+contradictions. A regression exposed ignored metadata/group/record issues; these
+now retain separate reason prefixes. Another exposed missing identifiers being
+treated as matching. Group quarantine has separate allocation eligibility and
+does not invalidate an otherwise eligible measurement. Exact-relation whitespace
+is handled under the approved numerical contract.
+
+Review snapshots preserve unvisited assays and assistant-proposed decisions.
+Semantic content excludes reviewer attribution and timestamps. Integration tests
+exercise immutable partial-import/resume, timestamp-only reuse with reconstructed
+content comparison, altered-queue rejection, and invalid-budget rejection before
+publication followed by a corrected retry. Active intervals count document time
+inside the six-hour total; the 20-document and ten-minute-per-document caps are
+checked. Overlapping, reversed and timezone-free intervals are rejected. An
+evidence-linked early blocker is retained without deriving a scientific verdict.
+The local `review-import` command is exercised through a subprocess.
+
+Full offline checkpoint: **221 passed, 1 skipped in 18.52s**. A subsequent CLI
+early-stop regression failed because the input stop was omitted; after correction,
+all five review integration tests passed. These are authored synthetic cases, not
+actual human confirmations, source compatibility evidence or feasibility results.
+TDD Guard's reporter is available; automated write-blocking enforcement remains
+unverified. Full candidate profiling, actual assay review and phase exit remain
+unfinished.
+
+### 2026-09-26 — Initial integrated scientific diagnostics
+
+Further red/green cycles added source-record repeat counts and per-identity
+dispersion, with missing assay/document provenance counted separately. Whole-group
+allocation uses exact rational targets, seed-17 hash ordering for size ties, and
+reports empty partitions without automatically failing scientific feasibility.
+The source-warning contrast distinguishes record removal, disappearing identities,
+unchanged shared medians and changed prospective medians. Unknown flags stay
+separate. Held-out equivalence members cannot enter either prospective training
+population; the common unflagged reference is explicitly restricted and is not
+ground truth. Median outputs are labeled provisional what-if diagnostics.
+
+An integration test retains quarantined measurements in descriptive outputs while
+excluding them from allocation; duplicate extraction encounters go into the audit
+without collapsing distinct source activity records. Criterion tests distinguish
+prediction (population plus allocation) from the study (also curation), rejecting
+incomplete or unconfirmed supported criteria. They do not supply a real scientific
+verdict. Full offline suite: **243 passed, 1 skipped in 17.93s**.
+
+These are initial component and integration checks, not completion of Tasks 4/5
+or Phase 1. Remaining validation includes richer evidence/record-exception input
+contracts, full-source wiring, actual review and criterion evidence, reproducible
+real-profile publication, and phase acceptance. No modeling has been performed.
+
+### 2026-09-26 — Full candidate source evidence and first review handoff
+
+After additional red/green cycles, the full-target adapter preserves complete
+activity payloads without a sample limit. Shared core release/schema validation
+remains green in both bounded and full adapters. Recursive molecular-context
+tests cover parent-only rows, self-parent claims, missing referenced molecules,
+missing structures and absent/null mappings. Document extraction preserves null
+years and missing references. The source-to-sampling integration counts distinct
+source molecules without potency filtering. Review imports now preserve rationale,
+missing evidence and document IDs in their semantic content; record exceptions
+have evidence fields and apply to their linked activity.
+
+Full offline verification: **266 passed, 1 skipped in 19.71s**. The separately
+enabled actual-source check passed **1 test in 0.99s** after the adapter refactor.
+Its bounded scope is unchanged; it is not independent validation of every row in
+the full extraction. No automatic TDD write-blocking claim is made.
+
+Actual read-only ChEMBL37 observations:
+
+| Stage | Observed counts | Interpretation |
+|---|---|---|
+| Full target/IC50 extraction | 10,079 activity records; 8,372 source molecules; 1,031 assays with IC50 records | Uncurated candidate population. All 2,448 target assay metadata rows are also preserved. |
+| Local B/9/D/human metadata screen | 7,214 activity records; 6,042 source molecules; 802 IC50 assays | Still not manually reviewed or numerically/chemically eligible. |
+| Recursive molecule context | 9,490 rows; 1,118 auxiliary parents; 0 missing referenced molecule dictionary IDs | Parent-only nodes are not candidate observations. |
+| Candidate measurement identity | 7,688 candidate molecule rows with identities; 7,668 distinct identities | 590 ambiguous-component, 39 missing-structure, 4 no-organic-parent and 51 unsupported-element candidate rows remain explicit. |
+| Conservative grouping | 729 quarantined components; 190 affected candidate identities; 7,478 candidate identities grouped for allocation before review | Quarantine is not measurement invalidity. Component reasons: 553 parent-equivalence-unresolved, 173 parent-structure-unresolved, 3 parent-equivalence-conflict. |
+| Pre-review grouping inventory | 7,274 equivalence groups; 3,167 scaffold-linked groups | These counts do not establish usable reviewed splits. |
+| Frozen review selection | 60 high-coverage plus 60 stratified, deterministically interleaved | Missing document IDs in extracted context: 0. |
+
+The chemistry run logged actual kekulization/tautomer-enumeration warnings;
+unresolved chemistry is retained under the approved rules. No new normalization
+policy or scientific threshold was introduced to increase coverage.
+
+Source evidence is atomically stored under ignored `data/chembl37/` with manifests:
+`candidate-extracts/e660b9a6...`, `molecule-contexts/95d096c1...`,
+`candidate-chemistry/eef8e7f3...`, and `review-selections/951ffa85...`.
+Separate execution records and retained Docker containers preserve run evidence.
+This is a first full candidate reconstruction, not a claim of independent full
+reconstruction on rerun or completed end-to-end acceptance.
+
+[Batch 001](reviews/phase1-batch-001.md) presents ten evidence-linked proposals:
+one assay-level compatible, one incompatible with the cell-free scope, eight
+unresolved. All are still **assistant-proposed**. The immutable imported snapshot
+is `review-state/reviews/4fdcbab9...`; it preserves 110 unreviewed entries and a
+265-second conservative elapsed-session audit charge. No full texts were consulted
+and no human-confirmed usable population or scientific exit verdict exists yet.

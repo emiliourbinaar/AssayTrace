@@ -1,10 +1,14 @@
 # Phase 1 operations — in development
 
-The current CLI supports the authored synthetic fixture only. The pinned ChEMBL
+The profiling CLI supports the authored synthetic fixture only; `review-import`
+also accepts local review ledgers. The pinned ChEMBL
 archive has been verified and extracted, and a bounded source adapter check has
 passed. The synthetic CLI now publishes molecular identities and provisional
-structure groups as well as numerical results. Full real-source extraction,
-parent-mapping integration and human assay review remain incomplete.
+structure groups as well as numerical results. Programmatic full-target extraction,
+recursive parent-context extraction and candidate chemistry/grouping have now run
+against the local pinned source. Their outputs are provisional evidence bundles;
+the real-profile CLI, complete validation and human-confirmed assay review remain
+unfinished.
 
 ## Reference environment
 
@@ -56,3 +60,55 @@ network requests, performs no model fitting and establishes no scientific
 eligibility. Without the environment variable the source test is skipped.
 The captured diagnostic evidence lives under ignored `data/chembl37/`; authored
 offline fixtures remain separately labeled in `tests/fixtures/README.md`.
+## Local review snapshots
+
+Inside the reference container, `python -m assaytrace review-import --selection
+selection.json --ledger ledger.json --output output` reads local files only.
+The selection is the complete frozen `review_queue` output, including its digest.
+The ledger is a cumulative snapshot with `decisions`, `active_intervals`, and an
+optional `stop`. Each decision supplies source_id, assay_id, category
+(compatible/incompatible/unresolved), confirmation_state
+(assistant_proposed/human_confirmed), evidence_refs, and record_exceptions.
+Reviewer and reviewed_at fields are optional audit metadata. Only actual explicit
+human review authorizes human_confirmed; the importer preserves the supplied state
+and cannot independently establish who approved a file.
+
+Active intervals have timezone-aware ISO `start` and `end`, and optional
+document_id. Include prior intervals when resuming; do not reset the budget in a
+new ledger. Partial decisions stay unresolved, and absent decisions stay
+unreviewed. An optional decisive_blocker stop supplies evidence_refs, explanation
+and confirmation_state; it is not itself a scientific feasibility verdict.
+
+The command prints artifact references. Scientific snapshots are immutable under
+`output/reviews/`; execution and review audit records are separate under
+`output/runs/`. Resume by importing an updated cumulative ledger with the same
+selection. Changed scientific decisions create a new snapshot; old snapshots are
+retained. The actual 120-assay source queue is now frozen. Batch 001 has ten
+assistant proposals and 110 unvisited entries; no human-confirmed ledger has
+been produced.
+
+## Real-source evidence checkpoint, 2026-09-26
+
+Read-only helpers `extract_target_candidates`, `extract_molecule_context` and
+`extract_documents` in `assaytrace.extract` were run against the already verified
+local SQLite file. `molecular_context_profile` combines the approved chemistry
+wrapper with the full source-parent graph. `assay_sampling_rows` and `review_queue`
+produce the frozen review order without potency filtering. No models ran.
+
+Ignored local evidence directories:
+
+- `data/chembl37/candidate-extracts/e660b9a6.../`: complete target/IC50 activity
+  payloads and all target assay metadata.
+- `data/chembl37/molecule-contexts/95d096c1.../`: candidates and recursive parents,
+  with original molecule/structure/hierarchy payloads.
+- `data/chembl37/candidate-chemistry/eef8e7f3.../`: standardized molecules and
+  grouping evidence before assay review.
+- `data/chembl37/review-selections/951ffa85.../`: frozen queue, sampling metadata
+  and source document context.
+- `data/chembl37/review-state/reviews/4fdcbab9.../`: ten unconfirmed proposals.
+
+Each directory has a completion manifest and byte/logical hashes. Extraction/run
+records are separate. These programmatic executions do not substitute for the
+remaining reproducible real-profile CLI and end-to-end acceptance checks. See
+[batch 001](reviews/phase1-batch-001.md) for full evidence paths and pending human
+decisions. Do not mark assistant proposals human-confirmed merely to run a profile.

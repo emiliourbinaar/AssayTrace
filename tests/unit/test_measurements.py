@@ -1,4 +1,12 @@
 from assaytrace.profile import pic50
+
+
+def test_surrounding_whitespace_does_not_change_an_exact_measurement():
+    try:
+        result = pic50(" 10 ", " nM ", " = ")
+    except ValueError:
+        result = None
+    assert result == "8.000000000000"
 import pytest
 
 
