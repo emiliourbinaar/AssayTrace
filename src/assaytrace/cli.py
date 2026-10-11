@@ -10,7 +10,7 @@ from assaytrace.profile import numerical_profile, molecular_profile
 from assaytrace.chemistry import chemistry_contract
 from assaytrace.groups import build_groups
 from assaytrace.review import publish_reviews
-from assaytrace.pipeline import publish_candidate_profile, processing_specification
+from assaytrace.pipeline import publish_candidate_profile, publish_assessment, processing_specification
 
 
 def main(argv=None):
@@ -27,7 +27,16 @@ def main(argv=None):
     review.add_argument("--selection", type=Path, required=True)
     review.add_argument("--ledger", type=Path, required=True)
     review.add_argument("--output", type=Path, required=True)
+    assess = commands.add_parser("assess")
+    assess.add_argument("--profile", type=Path, required=True)
+    assess.add_argument("--ledger", type=Path, required=True)
+    assess.add_argument("--synthetic", action="store_true")
+    assess.add_argument("--output", type=Path, required=True)
     args = parser.parse_args(argv)
+    if args.command == "assess":
+        result = publish_assessment(args.profile, args.ledger, args.output, synthetic=args.synthetic)
+        print(canonical_json(result).decode("utf-8"), end="")
+        return 0
     if args.command == "review-import":
         queue = json.loads(args.selection.read_bytes())
         ledger = json.loads(args.ledger.read_bytes())

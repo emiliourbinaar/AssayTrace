@@ -1,0 +1,47 @@
+{
+  "profile_manifest_sha256": "79f481c47415aed061e487bd05db78efbf9c949fd45f6d7eff9561598262739c",
+  "criteria": {
+    "population": {
+      "status": "inconclusive",
+      "evidence_refs": ["summary.json", "activities.jsonl"],
+      "limitations": [
+        "The profile has 10 assistant-proposed assay decisions, 110 unreviewed selected assays and no human-confirmed eligible population.",
+        "The 10079 source activities are candidate records, not a coherent reviewed prediction population.",
+        "The user deferred batch 001 confirmation; continuation does not confirm assay decisions."
+      ],
+      "scope": "Pinned ChEMBL37 CHEMBL220 IC50 candidate profile with the current unconfirmed review snapshot.",
+      "reviewer_confirmation": "assistant_proposed",
+      "next_action": "Retain batch 001 proposals for later user review; complete bounded review and record-level eligibility accounting before deciding criterion A."
+    },
+    "allocation": {
+      "status": "inconclusive",
+      "evidence_refs": ["summary.json", "groups.json", "evidence.json"],
+      "limitations": [
+        "The current reviewed allocation is empty because assay decisions are unconfirmed; this is not evidence that a future reviewed population cannot be allocated.",
+        "Pre-review chemistry and scaffold groups do not establish usable whole-group train, validation and test populations.",
+        "Source-parent quarantine concerns allocation certainty and does not establish measurement invalidity."
+      ],
+      "scope": "Whole-group allocation diagnostics on the current review snapshot, using the approved conservative grouping policy.",
+      "reviewer_confirmation": "assistant_proposed",
+      "next_action": "Inspect group concentration, actual partition coverage and limitations after a reviewed eligible population exists; do not infer failure from an empty unconfirmed population."
+    },
+    "curation": {
+      "status": "inconclusive",
+      "evidence_refs": ["summary.json", "evidence.json"],
+      "limitations": [
+        "No confirmed population currently establishes repeat coverage or a meaningful curation contrast.",
+        "Distinct source records, assays and documents do not establish experimental independence.",
+        "Removing flagged records alone does not establish changed training identity membership or changed prospective labels.",
+        "The common unflagged reference would be a restricted evaluation population, not ground truth; median aggregation and final evaluation design remain provisional."
+      ],
+      "scope": "Feasibility of the disagreement/aggregation question and the approved candidate potential_duplicate sensitivity analysis; no final modeling protocol.",
+      "reviewer_confirmation": "assistant_proposed",
+      "next_action": "Assess real repeat coverage and policy-induced identity/label changes on reviewed records, then explicitly narrow the research question if disagreement/aggregation is unsupported."
+    }
+  },
+  "exit_narrative": "Interim assessment only, not phase-exit acceptance. Prediction feasibility (population plus allocation) and curation-and-splitting study feasibility (all three criteria) remain inconclusive. Scientific decisions remain assistant-proposed. Source reproducibility and synthetic test success do not establish scientific feasibility. No model has been fitted and no new threshold or aggregation rule is adopted.",
+  "audit": {
+    "reviewer": "Codex assistant; no human confirmation claimed",
+    "context": "User requested that batch 001 remain assistant-proposed for later review."
+  }
+}

@@ -39,6 +39,7 @@ flowchart LR
   E --> F
   F --> G[Immutable JSON profile and diagnostics]
   F --> H[Separate execution audit]
+  G --> I[Explicit criterion ledger and derived assessment]
 ```
 
 The current CLI composes saved source bundles; those local data files are ignored

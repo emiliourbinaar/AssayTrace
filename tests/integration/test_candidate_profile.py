@@ -325,3 +325,184 @@ def test_profile_rejects_review_exceptions_that_do_not_resolve_to_the_reviewed_a
     with pytest.raises(ValueError, match="exception.*assay"):
         candidate_profile(raw, context, decisions, source_id="synthetic:pipeline",
                           chemistry_digest="test-chemistry", grouping_digest="test-groups")
+
+
+@pytest.fixture
+def assessment_inputs(candidate_bundle_inputs, tmp_path):
+    output = tmp_path / "evidence-profile"
+    assert main(["profile", "--inputs", str(candidate_bundle_inputs), "--synthetic",
+                 "--output", str(output)]) == 0
+    manifest = next((output / "profiles").glob("*/manifest.json"))
+    ledger = {
+        "profile_manifest_sha256": sha256(manifest.read_bytes()).hexdigest(),
+        "criteria": {name: {
+            "status": "inconclusive", "evidence_refs": ["summary.json", "evidence.json"],
+            "limitations": ["Authored synthetic evidence only"], "scope": "Synthetic population",
+            "reviewer_confirmation": "assistant_proposed", "next_action": "Review actual source evidence",
+        } for name in ("population", "allocation", "curation")},
+        "exit_narrative": "Synthetic example; no actual feasibility finding.",
+        "audit": {"reviewer": "synthetic actor", "reviewed_at": "2026-01-01T00:00:00Z"},
+    }
+    path = tmp_path / "assessment-ledger.json"
+    path.write_bytes(canonical_json(ledger))
+    return manifest, path, ledger
+
+
+def test_assess_cli_publishes_explicit_criteria_bound_to_immutable_evidence(assessment_inputs, tmp_path):
+    manifest, ledger_path, ledger = assessment_inputs
+    original = {p.name: (p.read_bytes(), p.stat().st_mtime_ns) for p in manifest.parent.iterdir()}
+    output = tmp_path / "assessment-output"
+    try:
+        status = main(["assess", "--profile", str(manifest), "--ledger", str(ledger_path),
+                       "--synthetic", "--output", str(output)])
+    except SystemExit as error:
+        status = error.code
+    assert status == 0, "The local assess command must accept an explicit, evidence-bound criterion ledger"
+    assessed = read_bundle(next((output / "profiles").glob("*/manifest.json")))
+    assessment = json.loads(assessed["artifacts"]["assessment.json"])
+    assert assessment == {"criteria": ledger["criteria"], "exit_narrative": ledger["exit_narrative"],
+                          "conclusions": {"prediction": "inconclusive", "study": "inconclusive"},
+                          "confirmation_state": "assistant_proposed"}
+    assert assessed["specification"]["evidence_manifest_sha256"] == ledger["profile_manifest_sha256"]
+    assert assessed["specification"]["assessment"] == sha256(canonical_json(assessment)).hexdigest()
+    assert json.loads(assessed["artifacts"]["summary.json"])["scientific_assessment"] == "assistant_proposed"
+    for name in ("activities.jsonl", "molecules.jsonl", "groups.json", "evidence.json"):
+        assert assessed["artifacts"][name] == original[name][0]
+    assert {p.name: (p.read_bytes(), p.stat().st_mtime_ns) for p in manifest.parent.iterdir()} == original
+    run = json.loads(next((output / "runs").glob("*.json")).read_bytes())
+    assert run["assessment_audit"] == ledger["audit"]
+
+
+def test_assess_cli_rejects_ledger_bound_to_another_profile(assessment_inputs, tmp_path):
+    manifest, ledger_path, ledger = assessment_inputs
+    ledger["profile_manifest_sha256"] = "0" * 64
+    ledger_path.write_bytes(canonical_json(ledger))
+    output = tmp_path / "assessment-output"
+    with pytest.raises(ValueError, match="profile.*digest"):
+        main(["assess", "--profile", str(manifest), "--ledger", str(ledger_path),
+              "--synthetic", "--output", str(output)])
+    assert not list(output.rglob("manifest.json"))
+
+
+@pytest.mark.parametrize("source_id,synthetic", [
+    ("synthetic:pipeline", False),
+    ("ChEMBL37:33c203740555f96067710cdfc1c3c55d890660e5908ec5cbf5817492c290d281", True),
+    ("ChEMBL99:unapproved", False),
+])
+def test_assess_cli_rejects_source_mode_mismatch(assessment_inputs, tmp_path, source_id, synthetic):
+    manifest, ledger_path, ledger = assessment_inputs
+    original = read_bundle(manifest)
+    changed = publish_bundle(tmp_path / "other-input", {**original["specification"], "source_id": source_id},
+                             original["artifacts"])
+    manifest = Path(changed["manifest_path"])
+    ledger["profile_manifest_sha256"] = sha256(manifest.read_bytes()).hexdigest()
+    ledger_path.write_bytes(canonical_json(ledger))
+    output = tmp_path / "assessment-output"
+    argv = ["assess", "--profile", str(manifest), "--ledger", str(ledger_path), "--output", str(output)]
+    if synthetic:
+        argv.append("--synthetic")
+    with pytest.raises(ValueError, match="source identity"):
+        main(argv)
+    assert not list(output.rglob("manifest.json"))
+
+
+@pytest.mark.parametrize("section,field,value", [
+    ("population", "evidence_refs", ["missing.json"]),
+    ("population", "evidence_refs", [123]),
+    ("curation", "scope", "   "),
+    ("curation", "limitations", [None]),
+    ("allocation", "reviewer", "must live in the audit"),
+    (None, "exit_narrative", ""),
+    (None, "unexpected_metadata", "do not silently ignore fields"),
+])
+def test_assess_cli_rejects_unresolved_or_malformed_evidence(assessment_inputs, tmp_path, section, field, value):
+    manifest, ledger_path, ledger = assessment_inputs
+    target = ledger if section is None else ledger["criteria"][section]
+    target[field] = value
+    ledger_path.write_bytes(canonical_json(ledger))
+    output = tmp_path / "assessment-output"
+    with pytest.raises(ValueError, match="Assessment"):
+        main(["assess", "--profile", str(manifest), "--ledger", str(ledger_path),
+              "--synthetic", "--output", str(output)])
+    assert not list(output.rglob("manifest.json"))
+
+
+@pytest.mark.parametrize("contract", ["synthetic-numeric-v1", "candidate-assessed-v1"])
+def test_assess_cli_requires_a_complete_unassessed_candidate_profile(assessment_inputs, tmp_path, contract):
+    manifest, ledger_path, ledger = assessment_inputs
+    original = read_bundle(manifest)
+    changed = publish_bundle(tmp_path / "other-input", {**original["specification"], "profile_contract": contract},
+                             original["artifacts"])
+    manifest = Path(changed["manifest_path"])
+    ledger["profile_manifest_sha256"] = sha256(manifest.read_bytes()).hexdigest()
+    ledger_path.write_bytes(canonical_json(ledger))
+    output = tmp_path / "assessment-output"
+    with pytest.raises(ValueError, match="unassessed candidate"):
+        main(["assess", "--profile", str(manifest), "--ledger", str(ledger_path),
+              "--synthetic", "--output", str(output)])
+    assert not list(output.rglob("manifest.json"))
+
+
+def test_assess_cli_audits_publication_failure_and_recovers(assessment_inputs, tmp_path, monkeypatch):
+    manifest, ledger_path, _ = assessment_inputs
+    output = tmp_path / "assessment-output"
+    argv = ["assess", "--profile", str(manifest), "--ledger", str(ledger_path),
+            "--synthetic", "--output", str(output)]
+    original_write = Path.write_bytes
+
+    def fail_assessment(path, payload):
+        if path.name == "assessment.json" and path.parent.name.startswith(".stage-"):
+            raise OSError("synthetic assessment storage failure")
+        return original_write(path, payload)
+
+    with monkeypatch.context() as fault:
+        fault.setattr(Path, "write_bytes", fail_assessment)
+        with pytest.raises(OSError, match="synthetic assessment"):
+            main(argv)
+    assert not list((output / "profiles").glob("*/manifest.json"))
+    failures = [json.loads(path.read_bytes()) for path in (output / "runs").glob("*.json")]
+    assert len(failures) == 1
+    assert failures[0]["status"] == "failed"
+    assert failures[0]["error_type"] == "OSError"
+    assert "manifest_path" not in failures[0]
+    assert main(argv) == 0
+    complete = list((output / "profiles").glob("*/manifest.json"))
+    assert len(complete) == 1
+    assert read_bundle(complete[0])["profile_id"] == failures[0]["profile_id"]
+    assert len(list((output / "runs").glob("*.json"))) == 2
+
+
+def test_assessment_identity_excludes_audit_but_changes_with_scientific_amendments(assessment_inputs, tmp_path):
+    manifest, ledger_path, ledger = assessment_inputs
+    output = tmp_path / "assessment-output"
+    argv = ["assess", "--profile", str(manifest), "--ledger", str(ledger_path),
+            "--synthetic", "--output", str(output)]
+    assert main(argv) == 0
+    original = next((output / "profiles").glob("*/manifest.json"))
+    before = {p.name: (p.read_bytes(), p.stat().st_mtime_ns) for p in original.parent.iterdir()}
+    ledger["audit"] = {"reviewer": "another synthetic actor", "reviewed_at": "2026-02-01T00:00:00Z"}
+    ledger_path.write_bytes(canonical_json(ledger))
+    assert main(argv) == 0
+    assert list((output / "profiles").glob("*/manifest.json")) == [original]
+    assert {p.name: (p.read_bytes(), p.stat().st_mtime_ns) for p in original.parent.iterdir()} == before
+    runs = [json.loads(path.read_bytes()) for path in (output / "runs").glob("*.json")]
+    reused = next(row for row in runs if row["reused"])
+    assert reused["validation_mode"] == "reconstruction_compared"
+    assert reused["assessment_audit"] == ledger["audit"]
+    ledger["exit_narrative"] += " Documented synthetic amendment."
+    ledger_path.write_bytes(canonical_json(ledger))
+    assert main(argv) == 0
+    assert len(list((output / "profiles").glob("*/manifest.json"))) == 2
+    assert {p.name: (p.read_bytes(), p.stat().st_mtime_ns) for p in original.parent.iterdir()} == before
+
+
+@pytest.mark.parametrize("status", ["supported", "not_supported"])
+def test_assess_cli_never_promotes_unconfirmed_decisive_criteria(assessment_inputs, tmp_path, status):
+    manifest, ledger_path, ledger = assessment_inputs
+    ledger["criteria"]["population"]["status"] = status
+    ledger_path.write_bytes(canonical_json(ledger))
+    output = tmp_path / "assessment-output"
+    with pytest.raises(ValueError, match="unconfirmed scientific criterion"):
+        main(["assess", "--profile", str(manifest), "--ledger", str(ledger_path),
+              "--synthetic", "--output", str(output)])
+    assert not list(output.rglob("manifest.json"))

@@ -6,7 +6,7 @@ from datetime import datetime, timezone
 
 from assaytrace.artifacts import canonical_json, read_bundle, publish_bundle, record_run
 from assaytrace.chemistry import chemistry_contract
-from assaytrace.profile import molecular_context_profile, pic50, profile_evidence
+from assaytrace.profile import molecular_context_profile, pic50, profile_evidence, conclusions
 from assaytrace.review import import_reviews, metadata_reasons, record_eligibility
 from assaytrace.contracts import dedupe_activities
 
@@ -23,6 +23,29 @@ def processing_specification():
     }
 
 
+def _validate_source_mode(source_id, synthetic):
+    if synthetic:
+        if not source_id.startswith("synthetic:"):
+            raise ValueError("Synthetic mode requires explicitly synthetic source identity")
+    elif source_id != "ChEMBL37:33c203740555f96067710cdfc1c3c55d890660e5908ec5cbf5817492c290d281":
+        raise ValueError("Release mode requires the approved pinned ChEMBL37 source identity")
+
+
+def _publish_profile(output, specification, artifacts, started_at, audit):
+    try:
+        result = publish_bundle(output / "profiles", specification, artifacts)
+    except Exception as error:
+        record_run(output / "runs", {
+            "status": "failed", "profile_id": sha256(canonical_json(specification)).hexdigest(),
+            "started_at": started_at, "finished_at": datetime.now(timezone.utc).isoformat(),
+            "error_type": type(error).__name__, "error_message": str(error),
+        })
+        raise
+    record_run(output / "runs", {**result, **audit, "started_at": started_at,
+                                  "finished_at": datetime.now(timezone.utc).isoformat()})
+    return result
+
+
 def publish_candidate_profile(descriptor_path, output, *, synthetic=False):
     started_at = datetime.now(timezone.utc).isoformat()
     descriptor_path, output = Path(descriptor_path), Path(output)
@@ -32,11 +55,7 @@ def publish_candidate_profile(descriptor_path, output, *, synthetic=False):
     inputs = {name: read_bundle(path) for name, path in paths.items()}
     input_hashes = {name: sha256(path.read_bytes()).hexdigest() for name, path in paths.items()}
     source_id = inputs["candidate"]["specification"]["source_id"]
-    if synthetic:
-        if not source_id.startswith("synthetic:"):
-            raise ValueError("Synthetic mode requires explicitly synthetic source identity")
-    elif source_id != "ChEMBL37:33c203740555f96067710cdfc1c3c55d890660e5908ec5cbf5817492c290d281":
-        raise ValueError("Release mode requires the approved pinned ChEMBL37 source identity")
+    _validate_source_mode(source_id, synthetic)
     if any(bundle["specification"].get("source_id") != source_id for bundle in inputs.values()):
         raise ValueError("Input source identities differ")
     candidate_spec = inputs["candidate"]["specification"]
@@ -87,24 +106,67 @@ def publish_candidate_profile(descriptor_path, output, *, synthetic=False):
         "allocation_eligible_record_count": sum(row["allocation_eligible"] for row in profile["activities"]),
         "scientific_assessment": "not_performed",
     }
-    try:
-        result = publish_bundle(output / "profiles", specification, {
-            "activities.jsonl": b"".join(canonical_json(row) for row in profile["activities"]),
-            "molecules.jsonl": b"".join(canonical_json(row) for row in profile["molecules"]),
-            "groups.json": canonical_json(profile["groups"]),
-            "evidence.json": canonical_json(profile["evidence"]),
-            "summary.json": canonical_json(summary),
-        })
-    except Exception as error:
-        record_run(output / "runs", {
-            "status": "failed", "profile_id": sha256(canonical_json(specification)).hexdigest(),
-            "started_at": started_at, "finished_at": datetime.now(timezone.utc).isoformat(),
-            "error_type": type(error).__name__, "error_message": str(error),
-        })
-        raise
-    record_run(output / "runs", {**result, **profile["audit"], "started_at": started_at,
-                                  "finished_at": datetime.now(timezone.utc).isoformat()})
-    return result
+    return _publish_profile(output, specification, {
+        "activities.jsonl": b"".join(canonical_json(row) for row in profile["activities"]),
+        "molecules.jsonl": b"".join(canonical_json(row) for row in profile["molecules"]),
+        "groups.json": canonical_json(profile["groups"]),
+        "evidence.json": canonical_json(profile["evidence"]),
+        "summary.json": canonical_json(summary),
+    }, started_at, profile["audit"])
+
+
+def publish_assessment(profile_path, ledger_path, output, *, synthetic=False):
+    started_at = datetime.now(timezone.utc).isoformat()
+    profile_path, output = Path(profile_path), Path(output)
+    profile = read_bundle(profile_path)
+    if profile["specification"].get("profile_contract") != "candidate-reviewed-v1":
+        raise ValueError("Assessment requires an unassessed candidate profile")
+    source_id = profile["specification"]["source_id"]
+    _validate_source_mode(source_id, synthetic)
+    ledger = json.loads(Path(ledger_path).read_bytes())
+    required = {"profile_manifest_sha256", "criteria", "exit_narrative"}
+    if not isinstance(ledger, dict) or not required <= ledger.keys() or ledger.keys() - required - {"audit"}:
+        raise ValueError("Assessment ledger fields differ from the contract")
+    if not isinstance(ledger["exit_narrative"], str) or not ledger["exit_narrative"].strip():
+        raise ValueError("Assessment requires a nonempty exit narrative")
+    profile_digest = sha256(profile_path.read_bytes()).hexdigest()
+    if ledger.get("profile_manifest_sha256") != profile_digest:
+        raise ValueError("Assessment profile manifest digest differs from ledger")
+    criteria = ledger["criteria"]
+    if not isinstance(criteria, dict) or set(criteria) != {"population", "allocation", "curation"}:
+        raise ValueError("Assessment requires exactly the three scientific criteria")
+    fields = {"status", "evidence_refs", "limitations", "scope", "reviewer_confirmation", "next_action"}
+    for row in criteria.values():
+        if not isinstance(row, dict) or set(row) != fields:
+            raise ValueError("Assessment criterion fields differ from the contract")
+        if any(not isinstance(row[key], str) or not row[key].strip() for key in
+               ("status", "scope", "reviewer_confirmation", "next_action")):
+            raise ValueError("Assessment criterion text must be nonempty")
+        if any(not isinstance(row[key], list) or any(not isinstance(value, str) or not value.strip()
+               for value in row[key]) for key in ("evidence_refs", "limitations")):
+            raise ValueError("Assessment evidence and limitations must be text lists")
+        if not row["evidence_refs"] or any(ref not in profile["artifacts"] for ref in row["evidence_refs"]):
+            raise ValueError("Assessment evidence reference does not resolve in the bound profile")
+    assessment = {
+        "criteria": criteria, "exit_narrative": ledger["exit_narrative"],
+        "conclusions": conclusions(criteria),
+        "confirmation_state": ("human_confirmed" if all(
+            row["reviewer_confirmation"] == "human_confirmed" for row in criteria.values()
+        ) else "assistant_proposed"),
+    }
+    specification = {
+        **profile["specification"], **processing_specification(),
+        "profile_contract": "candidate-assessed-v1",
+        "evidence_manifest_sha256": profile_digest,
+        "assessment": sha256(canonical_json(assessment)).hexdigest(),
+    }
+    artifacts = dict(profile["artifacts"])
+    summary = json.loads(artifacts["summary.json"])
+    summary["scientific_assessment"] = assessment["confirmation_state"]
+    artifacts["summary.json"] = canonical_json(summary)
+    artifacts["assessment.json"] = canonical_json(assessment)
+    return _publish_profile(output, specification, artifacts, started_at,
+                            {"assessment_audit": ledger.get("audit", {})})
 
 
 def candidate_profile(raw, context, decisions, *, source_id, chemistry_digest, grouping_digest):

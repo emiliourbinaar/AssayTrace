@@ -22,7 +22,7 @@ acknowledgment time. Those records are preserved unchanged. Records written afte
 the October 11 timing correction have a separate `recorded_at`; direct callers
 that do not supply execution timing receive explicit null start/finish fields.
 Candidate publication errors are audited if the run directory remains writable.
-Input validation/chemistry failures and other commands' failure audits still need
+Input validation/chemistry failures and review/synthetic commands' failure audits still need
 broader coverage. An acknowledgment-write failure cannot guarantee a durable run
 record; the completed immutable bundle remains recoverable on rerun.
 
@@ -50,3 +50,21 @@ approved labels or evidence that record removal improves prediction.
 The separate source-contract test establishes its own bounded adapter evidence.
 `scientific_assessment=not_performed` explicitly defers the three scientific exit
 criteria. No model evaluation or final modeling dataset is produced here.
+
+## Derived criterion assessment
+
+`assess` publishes the `candidate-assessed-v1` contract. Its specification retains
+the source and input provenance, pins the original evidence manifest hash, adds
+the canonical `assessment.json` digest, and records the assessment processor's
+code/environment hashes. The original processor remains identifiable through
+the bound evidence manifest. Source scientific artifacts are copied without
+reinterpretation; `summary.json` changes only its `scientific_assessment` label.
+
+`assessment.json` contains one explicit record for each of the three criteria,
+the exit narrative, the mechanically combined prediction/study conclusions and
+the overall confirmation state. Evidence references name artifacts in the bound
+profile. Content uses canonical byte equality, including confirmation state.
+Reviewer names and review times belong in `assessment_audit` in run records;
+they cannot change scientific identity. Assessment publication failures use the
+same failed-run contract as candidate publication. A proposed inconclusive
+assessment does not constitute a confirmed phase-exit decision.

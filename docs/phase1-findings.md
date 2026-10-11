@@ -40,6 +40,14 @@ truth. No sample cutoff or disagreement threshold has been adopted.
 The engineering result includes [local operations](phase1-operations.md), a
 [profile data dictionary](phase1-profile-data-dictionary.md), immutable publication
 and tested failure recovery. Remaining Phase 1 work includes fuller source and
-evidence validation, acquisition/assessment CLI
+evidence validation, acquisition CLI
 wiring and broader failure auditing, followed by bounded scientific review and
 the three criterion assessments. Later phases remain at roadmap level.
+
+The local `assess` command now preserves these interim proposals in a derived
+immutable profile, using the [explicit criterion ledger](reviews/phase1-interim-criteria.json).
+All three criteria remain `assistant_proposed` and `inconclusive`; the command
+does not infer verdicts from counts, confirm assay decisions or establish that a
+claim is scientifically justified. Its evidence references resolve to the bound
+profile's hashed artifacts. This is an engineering integration result and an
+auditable interim proposal, not phase-exit acceptance.

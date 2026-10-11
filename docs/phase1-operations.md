@@ -152,7 +152,7 @@ manifest hashes enter the profile specification. Synthetic bundle inputs require
 `--synthetic` and retain explicit `not_established` source compatibility.
 
 See [profile data dictionary](phase1-profile-data-dictionary.md) for output grains
-and interpretations. Acquisition and criterion-assessment CLI commands, fuller
+and interpretations. The acquisition CLI command, fuller
 source relationship validation and the final
 scientific exit assessment remain pending; this is not Phase 1 acceptance.
 
@@ -168,5 +168,48 @@ Current runs separate execution `started_at`/`finished_at` from `recorded_at`
 limitations. Candidate publication failures create a separate failed-run record
 when storage permits; they do not create a completed profile. A rerun verifies or
 publishes the immutable bundle and creates its own execution record. Failures
-before candidate publication and failure auditing for the other commands remain
+before publication and failure auditing for the other commands remain
 outside this first error-audit integration.
+
+## Attach explicit scientific criteria
+
+`assess` consumes an immutable `candidate-reviewed-v1` profile and a local JSON
+ledger. It verifies the stored bundle and the ledger's exact
+`profile_manifest_sha256`, resolves evidence references within that profile,
+validates explicit criterion decisions, and publishes a new `candidate-assessed-v1`
+profile. It preserves activities, molecules, groups and diagnostic evidence
+byte-for-byte; it does not rerun extraction, chemistry or allocation.
+
+The ledger requires `criteria` with exactly `population`, `allocation` and
+`curation`, plus a nonempty `exit_narrative`. Each criterion supplies `status`,
+`evidence_refs`, `limitations`, `scope`, `reviewer_confirmation` and `next_action`.
+Evidence references are artifact names in the bound profile, such as
+`summary.json` or `evidence.json`; this first interface does not resolve arbitrary
+external URLs or files. The manifest hashes pin the referenced content.
+Execution/reviewer metadata belongs in the optional `audit` object, outside
+scientific content identity. Unknown semantic fields are rejected.
+
+Allowed statuses are `supported`, `not_supported` and `inconclusive`.
+Decisive criteria require `human_confirmed`; an assistant may preserve an
+`assistant_proposed` inconclusive assessment. The command validates declared
+confirmation state, but cannot authenticate a human's identity or establish that
+the evidence supports the prose. Do not write `human_confirmed` without actual
+user review. Prediction uses criteria A+B; study feasibility uses A+B+C.
+
+The current [interim ledger](reviews/phase1-interim-criteria.json) keeps every
+criterion assistant-proposed and inconclusive. It is not phase-exit acceptance.
+To reconstruct this local assessment:
+
+```powershell
+docker run --rm --network none --mount "type=bind,source=$PWD,target=/workspace" -w /workspace -e PYTHONPATH=/workspace/src assaytrace-phase1:test python -m assaytrace assess --profile data/chembl37/audited-profiles/profiles/f92d78e8921655cc1d6547e4891cad01cb2182e36757fc03c94da5b7552a0abc/manifest.json --ledger docs/reviews/phase1-interim-criteria.json --output data/chembl37/interim-assessments
+```
+
+The input profile is local ignored data. Synthetic fixtures require `--synthetic`;
+they cannot be labeled as pinned-release evidence. A rerun recomputes the
+assessment and compares the incoming output with the stored bundle. Its
+`reconstruction_compared` result refers to assessment reconstruction, not fresh
+scientific profiling. Changing only `audit` appends a run without changing the
+bundle; changing criterion content or the narrative creates a new profile.
+Amendments should point to the original evidence profile, not chain assessed
+profiles. Publication failures are audited when storage permits and recover on
+rerun; pre-publication validation failures are not yet captured in run records.

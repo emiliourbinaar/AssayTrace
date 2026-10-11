@@ -551,3 +551,63 @@ Full offline regression after this change: `python -m pytest -q` in the referenc
 Docker image with networking disabled: **317 passed, 1 skipped in 23.47s**, exit 0.
 The skipped live-source test is separately recorded above. This run does not
 alter the still-unconfirmed scientific assessment.
+
+### 2026-10-11 — Explicit criterion-assessment CLI
+
+Implemented the approved local `assess` interface from Tasks 5–6. Routine
+interface choices: `--profile` names a completed unassessed candidate manifest;
+`--ledger` carries its exact manifest digest, the three criteria and narrative;
+`--output` receives a new immutable profile. `--synthetic` is mandatory for
+synthetic source identity. Evidence references name artifacts in that bound
+profile; arbitrary external evidence resolution is not implemented here.
+These choices add no scientific threshold, automatic verdict or review authority.
+
+Observed red–green cycles used
+`python -m pytest tests/integration/test_candidate_profile.py -k <selector> -q --tb=short`
+inside the existing Docker image with networking disabled:
+
+| Behavior / selector | Observed red | Minimal green evidence |
+|---|---|---|
+| `assess_cli` initial explicit ledger publication | 1 failed: command returned parser status 2, not 0 | Candidate plus criterion tests: 42 passed in 2.61s |
+| `ledger_bound` exact evidence-profile digest | 1 failed: wrong digest did not raise | Assessment subset: 2 passed in 1.20s |
+| `assess_cli_rejects_source` source mode | 3 failed: mode mismatches did not raise | Assessment subset: 5 passed in 1.45s |
+| `malformed_evidence` semantic fields and resolvable references | 7 failed: malformed/unresolved inputs did not raise | Candidate plus criterion tests: 53 passed in 5.04s |
+| `requires_a_complete` candidate profile contract | 2 failed: incompatible profile contracts did not raise | Assessment subset: 14 passed in 2.64s |
+| `assess_cli_audits` publication failure | 1 failed: expected one failed-run record, found zero | Candidate integration file: 42 passed in 4.72s |
+
+After green, extracted shared source-mode validation and publication/failure
+auditing used by candidate and assessment paths. Candidate plus criterion tests
+remained green: **57 passed in 5.75s**. An added integration check of existing
+rerun/amendment behavior passed immediately (1 passed in 1.31s); it is supplemental
+coverage, not a claimed new red–green cycle. Two further integration cases exercise
+the existing prohibition on unconfirmed supported/not-supported criteria.
+
+Full final offline command: `python -m pytest -q`, reference Docker image,
+networking disabled: **335 passed, 1 skipped in 25.52s**, exit 0. The opt-in source
+test is the skip; its separately observed result is recorded above. Automated
+TDD Guard write-blocking enforcement remains unverified; explicit TDD was used.
+
+The real-data invocation documented in [operations](phase1-operations.md) returned
+exit 0 using [the interim ledger](reviews/phase1-interim-criteria.json). It derived
+`data/chembl37/interim-assessments/profiles/e46d285b8ed888e5b5ca0b2b15b208dcfbcd6bcd90a655b0fe170354f9cf47c8/`
+from the earlier `f92d78e8...` evidence profile. Derived manifest SHA-256:
+`193e4a351953c805881454be1875404030e029b6b689df47dc1faf5944a8511f`.
+
+A second invocation through the same CLI entry point returned `reused=true` and
+`validation_mode=reconstruction_compared`. Independent checks confirmed:
+
+- All derived bundle file hashes and modification timestamps remained unchanged.
+- Activities, molecules, groups and diagnostic evidence match the source profile
+  byte-for-byte. Only the summary's `scientific_assessment` field changes to
+  `assistant_proposed`, and `assessment.json` is added.
+- Counts remain 10,079 activities, 10 proposed assay decisions, 110 unreviewed
+  selected assays, zero confirmed assays and zero eligible reviewed records.
+- Prediction and study conclusions are both `inconclusive`, with all three
+  criteria explicitly assistant-proposed. No assay decision was changed.
+- The earlier source-verification bundle also passed a fresh `read_bundle`
+  integrity check (`stored_integrity_only`); the large archive was not rehashed.
+
+Assessment reconstruction validates this composition and explicit input contract.
+It does not rerun chemistry or establish the scientific truth of the supplied
+criterion narratives. Human review, acquisition CLI wiring, broader error audits,
+remaining source/evidence checks and phase acceptance are still outstanding.

@@ -60,3 +60,10 @@ inputs, never real assay approvals. The tests exercise local provenance links,
 record exclusions, grouping quarantine, unknown review state, deterministic
 reconstruction and publication recovery. Their success is not ChEMBL source
 compatibility or scientific feasibility evidence.
+
+The same integration file includes authored criterion ledgers and synthetic
+confirmation labels for `assess`. Those examples exercise evidence binding,
+explicit confirmation requirements, immutable amendments and failure recovery.
+Their statuses are not findings about actual ChEMBL feasibility. Tests that
+deliberately use an official-looking source ID exercise mode rejection only and
+do not represent captured release data.
