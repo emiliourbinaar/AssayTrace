@@ -16,8 +16,12 @@ The verified stored-input reconstruction has 10,079 distinct release-qualified
 activity keys. Its chemistry and grouping files match the earlier checkpoint
 byte-for-byte. Identical rerun comparison preserves every original file timestamp;
 a reconstruction in a separate output directory produces identical scientific
-files and manifest. This evidence is limited to reconstruction from stored
-extraction artifacts; independent SQLite/archive re-extraction is still pending.
+files and manifest. A separate October 11 acceptance run also verified the local
+SQLite bytes against the pinned archive member and freshly reproduced 10,079
+activities, 9,490 molecular-context rows, 881 documents and the 120-assay queue.
+It used the same production adapters and the preserved document-ID request;
+this establishes source binding and repeatability, not independent validation of
+the adapters' scientific interpretation or assay eligibility.
 
 | Scientific exit criterion | Current assessment proposal | Evidence and limitation | Next evidence needed |
 |---|---|---|---|
@@ -36,6 +40,6 @@ truth. No sample cutoff or disagreement threshold has been adopted.
 The engineering result includes [local operations](phase1-operations.md), a
 [profile data dictionary](phase1-profile-data-dictionary.md), immutable publication
 and tested failure recovery. Remaining Phase 1 work includes fuller source and
-evidence validation, independent source re-extraction, acquisition/assessment CLI
+evidence validation, acquisition/assessment CLI
 wiring and broader failure auditing, followed by bounded scientific review and
 the three criterion assessments. Later phases remain at roadmap level.

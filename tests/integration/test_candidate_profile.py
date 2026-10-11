@@ -311,3 +311,17 @@ def test_cli_run_timestamps_enclose_actual_processing(candidate_bundle_inputs, c
     assert record["finished_at"] is not None
     start, finish = (datetime.fromisoformat(record[key]) for key in ("started_at", "finished_at"))
     assert start <= observed[0][0] <= observed[0][1] <= finish <= datetime.fromisoformat(record["recorded_at"])
+
+
+@pytest.mark.parametrize("exception_activity_id", [2, 999])
+def test_profile_rejects_review_exceptions_that_do_not_resolve_to_the_reviewed_assay(candidate_inputs,
+                                                                                  exception_activity_id):
+    raw, context, decisions = candidate_inputs
+    raw["activities"][1]["assay_id"] = 2
+    raw["assays"].append({**raw["assays"][0], "assay_id": 2})
+    decisions[0]["record_exceptions"] = [{"activity_id": exception_activity_id,
+                                         "reason": "synthetic_record_contradiction",
+                                         "evidence_refs": ["synthetic:exception"]}]
+    with pytest.raises(ValueError, match="exception.*assay"):
+        candidate_profile(raw, context, decisions, source_id="synthetic:pipeline",
+                          chemistry_digest="test-chemistry", grouping_digest="test-groups")

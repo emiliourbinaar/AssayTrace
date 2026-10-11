@@ -108,6 +108,11 @@ def publish_candidate_profile(descriptor_path, output, *, synthetic=False):
 
 
 def candidate_profile(raw, context, decisions, *, source_id, chemistry_digest, grouping_digest):
+    activity_assay_links = {(row["activity_id"], row["assay_id"]) for row in raw["activities"]}
+    for decision in decisions:
+        for exception in decision.get("record_exceptions", []):
+            if (exception["activity_id"], decision["assay_id"]) not in activity_assay_links:
+                raise ValueError("Review record exception does not resolve to the reviewed assay")
     molecules, groups = molecular_context_profile(context, source_id, chemistry_digest, grouping_digest)
     by_molecule = {row["molecule_id"]: row for row in molecules}
     by_assay = {row["assay_id"]: row for row in raw["assays"]}

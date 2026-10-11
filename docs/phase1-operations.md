@@ -133,6 +133,8 @@ existing bundle under the same specification; changed output fails without
 overwriting it. Source records with equal values remain separate. Conflicted
 parent groups remain descriptive measurements when their other eligibility gates
 pass, but cannot enter allocation. Unconfirmed reviews never authorize records.
+Every record exception must resolve to a candidate activity in its reviewed
+assay; unknown or wrong-assay activity references abort profiling.
 
 On 2026-10-10 the user explicitly deferred review: keep batch 001 assistant-proposed.
 The descriptor therefore still references that snapshot. Empty reviewed counts
@@ -151,8 +153,15 @@ manifest hashes enter the profile specification. Synthetic bundle inputs require
 
 See [profile data dictionary](phase1-profile-data-dictionary.md) for output grains
 and interpretations. Acquisition and criterion-assessment CLI commands, fuller
-source relationship validation, independent archive re-extraction and the final
+source relationship validation and the final
 scientific exit assessment remain pending; this is not Phase 1 acceptance.
+
+A separate October 11 acceptance check verified the archive checksum, matched
+the local SQLite bytes to its archive member, and freshly reproduced the stored
+candidate/context/document/sampling/queue artifacts. The document request used
+the same IDs as the preserved context. See the [validation record](phase1-validation.md)
+for the immutable evidence bundle. This check uses the same production adapters;
+it does not establish scientific correctness or change the profile CLI's scope.
 
 Current runs separate execution `started_at`/`finished_at` from `recorded_at`
 (acknowledgment). Older records are preserved with their documented timing

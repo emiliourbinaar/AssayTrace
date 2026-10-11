@@ -1,6 +1,6 @@
 # AssayTrace project roadmap
 
-**Status:** Overall project direction approved; this reorganized roadmap is submitted for review. Phase designs and implementation remain separately gated. Updated 2026-09-11.
+**Status:** Overall project direction approved. Phase 1 specification and implementation plan approved for inline execution; Phase 1 is in progress and has not passed scientific exit review. Later phases remain separately gated. Status updated 2026-10-11; roadmap scope remains unchanged.
 
 ## Purpose and scope
 
@@ -59,7 +59,7 @@ For every phase:
 
 The current `AGENTS.md` supplies the Superpowers and execution-choice instructions. The user's explicit request also requires implementation-plan approval. Resolve that combination by requiring both plan approval and execution choice before development. Do not ask for an execution mode while the design is still awaiting approval.
 
-Each document records its status and approved revision. A requirement change affecting scientific meaning, scope, or interfaces returns to design review. Routine implementation choices within the approved plan do not require repeated permission. No writing-plans invocation or implementation plan is needed for the present documentation-only revision.
+Each document records its status and approved revision. A requirement change affecting scientific meaning, scope, or interfaces returns to design review. Routine implementation choices within the approved plan do not require repeated permission. The original roadmap reorganization was documentation-only; Phase 1 subsequently received its separate specification, implementation-plan and inline-execution approvals.
 
 ## Decisions deliberately left provisional
 
@@ -78,5 +78,7 @@ Out of scope unless a demonstrated need leads to a separately approved change: m
 ## Document map
 
 - [Initial proposal and historical feasibility evidence](superpowers/plans/2026-09-11-assaytrace.md): original body retained; execution details are historical.
-- [Phase 1 design specification](superpowers/specs/2026-09-11-phase-1-foundation-feasibility-design.md): current draft awaiting review.
+- [Phase 1 design specification](superpowers/specs/2026-09-11-phase-1-foundation-feasibility-design.md): approved for the bounded Phase 1 scope.
+- [Phase 1 implementation plan](superpowers/plans/2026-09-12-phase-1-implementation.md): approved for inline execution.
+- [Interim findings](phase1-findings.md) and [execution evidence](phase1-validation.md): scientific uncertainty and verified implementation results; not phase-exit approval.
 - Future phase specifications and implementation plans will be written only at their respective workflow gates. Historical file lists, schema proposals, and commands will be reconsidered there, not copied into active future plans now.

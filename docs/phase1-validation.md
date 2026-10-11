@@ -487,3 +487,67 @@ All three fall within Docker's independently recorded container start/finish,
 in the correct order. No source or review state changed. The
 [interim findings](phase1-findings.md) summarize the unresolved scientific criteria;
 they are not a phase-exit acceptance request.
+
+### 2026-10-11 — Independent pinned-source reconstruction acceptance check
+
+Started retained container `assaytrace-source-reconstruction-20261011` with no
+network, four-CPU/4-GiB caps, a read-only workspace mount and a separate writable
+`data/chembl37/source-validation` evidence directory. Available host disk space
+before starting was 221,943,906,304 bytes. The one-off verification driver is
+preserved at `artifacts/validation/source_reconstruction_20261011.py`; it calls
+the tested adapters and publisher rather than introducing new scientific rules.
+
+The check streams the archive checksum and its SQLite member, compares the local
+database bytes, then independently re-extracts the target activities, recursive
+molecular context, preserved document-ID request, sampling rows and frozen queue.
+It does not download data or write another 30-GB database copy. Each reconstructed
+artifact must match its prior counterpart before a verification bundle can be
+published. Results are recorded below only after completion.
+
+During this acceptance work the separate real-source adapter command was rerun:
+`python -m pytest tests/source/test_chembl37_contract.py -q` with
+`ASSAYTRACE_CHEMBL37_SQLITE=/workspace/data/chembl37/extracted/chembl_37/chembl_37_sqlite/chembl_37.db`
+inside the existing Docker image. **1 passed in 1.13s**, exit 0. This remains a
+bounded actual-source check, distinct from 315 passing offline tests and from
+scientific review. The new root README's local links all resolved; documentation
+status now reflects approved, ongoing Phase 1 execution without advancing phases.
+
+The retained container finished with exit 0 at `2026-10-11T16:46:24.546880691Z`
+(start `2026-10-11T16:30:53.808051769Z`). Its completed verification bundle is
+`data/chembl37/source-validation/bundles/7a33c64c89d21da15d729cb0d1e77c1f7c5d4bf1995734126a1164fd7b56c4c8/`.
+Manifest SHA-256:
+`85ad7f031c19e53c96c680b9abe211de6409bba3a7182089c170bbc8c06ebb18`.
+The separately recorded execution ran from `16:30:54.894198+00:00` to
+`16:46:24.450491+00:00`; acknowledgment followed at `16:46:24.453307+00:00`.
+
+- Archive SHA-256 matches the approved pin:
+  `33c203740555f96067710cdfc1c3c55d890660e5908ec5cbf5817492c290d281`.
+- The local 30,480,314,368-byte database matches member
+  `chembl_37/chembl_37_sqlite/chembl_37.db`, SHA-256
+  `4be13df3b68e25dcd0bff44bf094033b5aebe98f415acdc8c1cdf380e0c15142`.
+- Fresh canonical outputs match the preserved artifacts byte-for-byte: 10,079
+  activities, 9,490 molecular-context rows, 881 documents, sampling rows and the
+  frozen 120-assay queue. Documents were requested using the same IDs as the
+  preserved context; this is not a completeness claim for other document scopes.
+
+This was a separate reconstruction using the same production adapters, not an
+independent implementation of their scientific interpretation. No review state
+changed, no models ran and scientific assessment remains `not_performed`.
+
+### 2026-10-11 — Review-exception source linkage
+
+The approved record-level contradiction rule requires an exception to identify
+an activity in the reviewed assay. Added one parameterized integration test for
+a wrong-assay activity and an absent activity. Before implementation,
+`python -m pytest tests/integration/test_candidate_profile.py -q --tb=short`
+produced **2 failed, 25 passed in 3.77s**, exit 1; both failed because the pipeline
+did not raise. The minimal fix checks the activity/assay links before profiling.
+Then `python -m pytest tests/integration/test_candidate_profile.py tests/unit/test_review_eligibility.py -q --tb=short`
+produced **57 passed in 3.54s**, exit 0. No refactoring was needed for this small
+validation. Explicit TDD was observed; automated TDD Guard write-blocking
+enforcement remains unverified. All real batch 001 exception lists remain empty.
+
+Full offline regression after this change: `python -m pytest -q` in the reference
+Docker image with networking disabled: **317 passed, 1 skipped in 23.47s**, exit 0.
+The skipped live-source test is separately recorded above. This run does not
+alter the still-unconfirmed scientific assessment.

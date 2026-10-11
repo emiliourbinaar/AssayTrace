@@ -2,7 +2,7 @@
 
 > **For agentic workers:** After explicit plan approval and the user's execution-mode choice, use `superpowers:subagent-driven-development` or `superpowers:executing-plans`, respectively. Follow `superpowers:test-driven-development` and the applicable TDD Guard instructions. Do not spawn agents before that choice.
 
-**Status:** Approved for inline execution on 2026-09-12 with the user's bounded contract corrections incorporated below. As of 2026-09-13, WSL/Docker are installed, the locked Linux test image runs, and the first synthetic CLI path plus initial contract/recovery tests pass. Tasks 1–2 remain in progress; acquisition, real-source compatibility, chemistry and review are not complete. The task code blocks below remain requirements, not evidence of execution. See [execution evidence](../../phase1-validation.md).
+**Status:** Approved for inline execution on 2026-09-12 with the user's bounded contract corrections incorporated below. As of 2026-10-11, the reference environment, pinned-source acquisition, bounded adapter check, full candidate extraction, chemistry/grouping, review import and stored-input profile CLI have execution evidence. Scientific review, remaining engineering contracts and phase acceptance are incomplete. Batch 001 remains assistant-proposed at the user's request. The task code blocks below remain requirements, not evidence of completion. See [execution evidence](../../phase1-validation.md) and [interim findings](../../phase1-findings.md).
 
 **Goal:** Produce reproducible, source-backed evidence for the three Phase 1 scientific exit criteria without building the later modeling or orchestration system.
 
