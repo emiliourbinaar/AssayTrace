@@ -3,6 +3,8 @@ import pytest
 import json
 from pathlib import Path
 from hashlib import sha256
+from datetime import datetime, timezone
+import importlib
 
 from assaytrace.pipeline import candidate_profile
 from assaytrace.artifacts import canonical_json, publish_bundle, read_bundle
@@ -254,6 +256,12 @@ def test_candidate_cli_recovers_after_interrupted_publication(candidate_bundle_i
     complete = [path for path in (output / "profiles").glob("*/manifest.json")
                 if not path.parent.name.startswith(".stage-")]
     assert len(complete) == (1 if failure == "acknowledgment" else 0)
+    failed_runs = [json.loads(path.read_bytes()) for path in (output / "runs").glob("*.json")]
+    assert len(failed_runs) == (1 if failure == "artifact_write" else 0)
+    if failure == "artifact_write":
+        assert failed_runs[0]["status"] == "failed"
+        assert failed_runs[0]["error_type"] == "OSError"
+        assert "manifest_path" not in failed_runs[0]
     before = ({p.name: (p.read_bytes(), p.stat().st_mtime_ns) for p in complete[0].parent.iterdir()}
               if complete else None)
     assert main(argv) == 0
@@ -264,4 +272,42 @@ def test_candidate_cli_recovers_after_interrupted_publication(candidate_bundle_i
     assert len(bundle["artifacts"]["activities.jsonl"].splitlines()) == 2
     if before is not None:
         assert {p.name: (p.read_bytes(), p.stat().st_mtime_ns) for p in complete[0].parent.iterdir()} == before
-    assert len(list((output / "runs").glob("*.json"))) == 1
+    assert len(list((output / "runs").glob("*.json"))) == (2 if failure == "artifact_write" else 1)
+
+
+@pytest.mark.parametrize("mode,module_name,operation", [
+    ("candidate", "assaytrace.pipeline", "candidate_profile"),
+    ("synthetic", "assaytrace.cli", "extract_synthetic"),
+    ("review", "assaytrace.review", "review_budget"),
+])
+def test_cli_run_timestamps_enclose_actual_processing(candidate_bundle_inputs, candidate_inputs,
+                                                     synthetic_source, tmp_path, monkeypatch,
+                                                     mode, module_name, operation):
+    output = tmp_path / "timed-output"
+    if mode == "candidate":
+        argv = ["profile", "--inputs", str(candidate_bundle_inputs), "--synthetic", "--output", str(output)]
+    elif mode == "synthetic":
+        argv = ["profile", "--source", str(synthetic_source), "--synthetic", "--output", str(output)]
+    else:
+        descriptor = json.loads(candidate_bundle_inputs.read_bytes())
+        selection = Path(descriptor["selection"]).parent / "selection.json"
+        ledger = tmp_path / "ledger.json"
+        ledger.write_bytes(canonical_json({"decisions": candidate_inputs[2], "active_intervals": []}))
+        argv = ["review-import", "--selection", str(selection), "--ledger", str(ledger), "--output", str(output)]
+    module = importlib.import_module(module_name)
+    original = getattr(module, operation)
+    observed = []
+
+    def timed_operation(*args, **kwargs):
+        begin = datetime.now(timezone.utc)
+        result = original(*args, **kwargs)
+        observed.append((begin, datetime.now(timezone.utc)))
+        return result
+
+    monkeypatch.setattr(module, operation, timed_operation)
+    assert main(argv) == 0
+    record = json.loads(next((output / "runs").glob("*.json")).read_bytes())
+    assert record["started_at"] is not None
+    assert record["finished_at"] is not None
+    start, finish = (datetime.fromisoformat(record[key]) for key in ("started_at", "finished_at"))
+    assert start <= observed[0][0] <= observed[0][1] <= finish <= datetime.fromisoformat(record["recorded_at"])

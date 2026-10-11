@@ -2,6 +2,7 @@
 import json
 from hashlib import sha256
 from pathlib import Path
+from datetime import datetime, timezone
 
 from assaytrace.artifacts import canonical_json, read_bundle, publish_bundle, record_run
 from assaytrace.chemistry import chemistry_contract
@@ -23,6 +24,7 @@ def processing_specification():
 
 
 def publish_candidate_profile(descriptor_path, output, *, synthetic=False):
+    started_at = datetime.now(timezone.utc).isoformat()
     descriptor_path, output = Path(descriptor_path), Path(output)
     descriptor = json.loads(descriptor_path.read_bytes())
     paths = {name: descriptor_path.parent / descriptor[name]
@@ -85,14 +87,23 @@ def publish_candidate_profile(descriptor_path, output, *, synthetic=False):
         "allocation_eligible_record_count": sum(row["allocation_eligible"] for row in profile["activities"]),
         "scientific_assessment": "not_performed",
     }
-    result = publish_bundle(output / "profiles", specification, {
-        "activities.jsonl": b"".join(canonical_json(row) for row in profile["activities"]),
-        "molecules.jsonl": b"".join(canonical_json(row) for row in profile["molecules"]),
-        "groups.json": canonical_json(profile["groups"]),
-        "evidence.json": canonical_json(profile["evidence"]),
-        "summary.json": canonical_json(summary),
-    })
-    record_run(output / "runs", {**result, **profile["audit"]})
+    try:
+        result = publish_bundle(output / "profiles", specification, {
+            "activities.jsonl": b"".join(canonical_json(row) for row in profile["activities"]),
+            "molecules.jsonl": b"".join(canonical_json(row) for row in profile["molecules"]),
+            "groups.json": canonical_json(profile["groups"]),
+            "evidence.json": canonical_json(profile["evidence"]),
+            "summary.json": canonical_json(summary),
+        })
+    except Exception as error:
+        record_run(output / "runs", {
+            "status": "failed", "profile_id": sha256(canonical_json(specification)).hexdigest(),
+            "started_at": started_at, "finished_at": datetime.now(timezone.utc).isoformat(),
+            "error_type": type(error).__name__, "error_message": str(error),
+        })
+        raise
+    record_run(output / "runs", {**result, **profile["audit"], "started_at": started_at,
+                                  "finished_at": datetime.now(timezone.utc).isoformat()})
     return result
 
 

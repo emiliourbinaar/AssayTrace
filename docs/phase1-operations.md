@@ -153,3 +153,11 @@ See [profile data dictionary](phase1-profile-data-dictionary.md) for output grai
 and interpretations. Acquisition and criterion-assessment CLI commands, fuller
 source relationship validation, independent archive re-extraction and the final
 scientific exit assessment remain pending; this is not Phase 1 acceptance.
+
+Current runs separate execution `started_at`/`finished_at` from `recorded_at`
+(acknowledgment). Older records are preserved with their documented timing
+limitations. Candidate publication failures create a separate failed-run record
+when storage permits; they do not create a completed profile. A rerun verifies or
+publishes the immutable bundle and creates its own execution record. Failures
+before candidate publication and failure auditing for the other commands remain
+outside this first error-audit integration.

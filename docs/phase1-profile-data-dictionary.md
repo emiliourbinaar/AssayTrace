@@ -15,7 +15,16 @@ record count.
 | `groups.json` | One full-context graph result | Candidate identity-to-equivalence/scaffold mappings, evidence edges, unresolved identities and quarantined components. Graph construction precedes reviewed-population projection. These mappings do not establish assay eligibility. |
 | `evidence.json` | One diagnostic result for eligible reviewed records | Source-record repeat counts and dispersion, allocation-excluded measurement count, group-preserving allocations and candidate source-warning contrast support. No automatic feasibility verdict. |
 | `summary.json` | One accounting summary | All source activity count, eligible measurement/allocation counts, confirmed/proposed decision counts, unreviewed selected assay count and evidence-state labels. |
-| `runs/<uuid>.json` | One successfully acknowledged execution | Bundle reference/hash, reuse/comparison state and repeated encounter count. Separate from the immutable profile. Current `started_at` is recorded at acknowledgment time, not a measured execution start; timing/error audit improvements remain pending. |
+| `runs/<uuid>.json` | One acknowledged success or captured publication failure | Successful records link the bundle/hash and reuse/comparison state. Current CLI operations capture actual start/finish timestamps; `recorded_at` is acknowledgment time. Candidate publication failures carry `status: failed`, the intended profile ID and error type/message, without inventing a completed manifest. |
+
+The October 10 checkpoint used an older audit writer whose `started_at` meant
+acknowledgment time. Those records are preserved unchanged. Records written after
+the October 11 timing correction have a separate `recorded_at`; direct callers
+that do not supply execution timing receive explicit null start/finish fields.
+Candidate publication errors are audited if the run directory remains writable.
+Input validation/chemistry failures and other commands' failure audits still need
+broader coverage. An acknowledgment-write failure cannot guarantee a durable run
+record; the completed immutable bundle remains recoverable on rerun.
 
 Measurement identities preserve the approved stereochemical/isotopic distinctions;
 equivalence and scaffold groups are conservative leakage-control groups. An

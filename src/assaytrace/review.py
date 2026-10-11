@@ -1,5 +1,5 @@
 from collections import defaultdict
-from datetime import datetime
+from datetime import datetime, timezone
 from hashlib import sha256
 from itertools import zip_longest
 from pathlib import Path
@@ -49,6 +49,7 @@ def review_budget(intervals):
 
 
 def publish_reviews(root, queue, decisions, *, intervals=(), stop=None):
+    started_at = datetime.now(timezone.utc).isoformat()
     budget = review_budget(intervals)
     imported = import_reviews(queue, decisions, stop=stop)
     content = {key: value for key, value in imported.items() if key != "audit"}
@@ -58,7 +59,9 @@ def publish_reviews(root, queue, decisions, *, intervals=(), stop=None):
     result = publish_bundle(Path(root) / "reviews", specification,
                             {"selection.json": canonical_json(queue), "reviews.json": canonical_json(content)})
     run_path = record_run(Path(root) / "runs", {**result, "review_audit": imported["audit"],
-                                               "budget": budget, "active_intervals": list(intervals)})
+                                               "budget": budget, "active_intervals": list(intervals),
+                                               "started_at": started_at,
+                                               "finished_at": datetime.now(timezone.utc).isoformat()})
     return {**result, "run_record": run_path}
 
 

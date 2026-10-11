@@ -2,6 +2,7 @@ import argparse
 import json
 from hashlib import sha256
 from pathlib import Path
+from datetime import datetime, timezone
 
 from assaytrace.artifacts import canonical_json, publish_bundle, record_run
 from assaytrace.extract import extract_synthetic
@@ -13,6 +14,7 @@ from assaytrace.pipeline import publish_candidate_profile, processing_specificat
 
 
 def main(argv=None):
+    started_at = datetime.now(timezone.utc).isoformat()
     parser = argparse.ArgumentParser(prog="assaytrace")
     commands = parser.add_subparsers(dest="command", required=True)
     profile = commands.add_parser("profile")
@@ -69,5 +71,6 @@ def main(argv=None):
         "molecules.jsonl": b"".join(canonical_json(row) for row in molecules),
         "groups.json": canonical_json(groups),
     })
-    record_run(args.output / "runs", result)
+    record_run(args.output / "runs", {**result, "started_at": started_at,
+                                       "finished_at": datetime.now(timezone.utc).isoformat()})
     return 0

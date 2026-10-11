@@ -440,3 +440,50 @@ byte-for-byte, providing a further comparison against the earlier execution.
 Phase 1 remains incomplete: human assay review and scientific criteria, independent
 source re-extraction, fuller relationship/evidence contracts, acquisition and
 assessment CLI wiring, and accurate start/end/failure run audits remain pending.
+
+### 2026-10-11 — Execution timing and publication-failure audit correction
+
+Saved the verified stored-input profile integration in local commit `654fc70`.
+The next approved operational step corrects a real audit limitation: `record_run`
+previously overwrote execution start with the time it wrote the acknowledgment.
+
+Using the same offline Docker test prefix:
+
+| Behavior | Observed red | Green |
+|---|---|---|
+| Separate execution timing from acknowledgment | Both unspecified and supplied timing cases received an invented/overwritten start | `test_publication.py`: 36 passed in 1.30s |
+| Capture actual processing boundaries for candidate profile, synthetic profile and review import | Three CLI run records had null start times | Candidate/publication/review-resume suites: 66 passed in 7.28s |
+| Record a failed run without a completion manifest | Audit attempted to hash a nonexistent manifest | Publication suite: 37 passed in 1.27s |
+| Preserve a failed candidate publication attempt through retry | No failed-run record existed after an injected artifact-write failure | Candidate/publication suites: 62 passed in 6.44s |
+
+Execution start/finish remain outside scientific artifacts. `recorded_at` denotes
+acknowledgment time. Unspecified timing in direct helper calls remains null rather
+than fabricated. Existing historical records are untouched. Candidate publication
+failures now retain an intended profile ID and error type/message without a
+completion-manifest claim, when the run directory is writable. Lost-acknowledgment
+recovery still verifies the completed bundle; a failed audit write cannot guarantee
+a run record. Pre-publication computation/input failures and failure audit wiring
+for other CLI commands remain pending, as documented in the data dictionary.
+
+Full offline verification: `python -m pytest -q` in the reference Docker image,
+**315 passed, 1 skipped in 29.13s**, exit 0. The skipped source test remains opt-in;
+no source-adapter changes were made. `git diff --check` passed. The real timing
+validation is recorded below after its result is inspected.
+
+Real validation completed successfully in retained container
+`assaytrace-audited-profile-20261011` (exit 0). Its new profile is
+`data/chembl37/audited-profiles/profiles/f92d78e8921655cc1d6547e4891cad01cb2182e36757fc03c94da5b7552a0abc/`;
+manifest SHA-256 is
+`79f481c47415aed061e487bd05db78efbf9c949fd45f6d7eff9561598262739c`.
+Read-only verification confirms all five scientific artifacts are byte-identical
+to the preceding profile. Only `processing_code_sha256` differs in the
+specification, appropriately producing a new profile identity.
+
+The run audit at `data/chembl37/audited-profiles/runs/d882d2d5d6f44a829447d8fc44306267.json`
+records UTC start `2026-10-11T16:24:05.166002+00:00`, finish
+`2026-10-11T16:26:37.926015+00:00` and acknowledgment
+`2026-10-11T16:26:37.931689+00:00`: **152.760013 seconds** of measured execution.
+All three fall within Docker's independently recorded container start/finish,
+in the correct order. No source or review state changed. The
+[interim findings](phase1-findings.md) summarize the unresolved scientific criteria;
+they are not a phase-exit acceptance request.

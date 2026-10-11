@@ -67,8 +67,10 @@ def record_run(root, result):
     root = Path(root)
     root.mkdir(parents=True, exist_ok=True)
     path = root / f"{uuid4().hex}.json"
-    record = {**result, "started_at": datetime.now(timezone.utc).isoformat(),
-              "manifest_sha256": sha256(Path(result["manifest_path"]).read_bytes()).hexdigest()}
+    record = {"started_at": None, "finished_at": None, **result,
+              "recorded_at": datetime.now(timezone.utc).isoformat()}
+    if result.get("status") != "failed":
+        record["manifest_sha256"] = sha256(Path(result["manifest_path"]).read_bytes()).hexdigest()
     with path.open("xb") as stream:
         stream.write(canonical_json(record))
     return str(path)

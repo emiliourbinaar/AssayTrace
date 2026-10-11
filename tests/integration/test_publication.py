@@ -2,6 +2,7 @@ import json
 from pathlib import Path
 import pytest
 import os
+from datetime import datetime, timezone
 from concurrent.futures import ThreadPoolExecutor
 from threading import Barrier
 
@@ -104,6 +105,37 @@ def test_run_records_are_distinct_and_outside_immutable_bundle(tmp_path):
     assert all(r["profile_id"] == result["profile_id"] for r in records)
     assert all("started_at" in r and "manifest_sha256" in r for r in records)
     assert all(Path(p).parent == tmp_path / "runs" for p in (first, second))
+
+
+@pytest.mark.parametrize("timing", [None, {
+    "started_at": "2020-01-01T00:00:00+00:00", "finished_at": "2020-01-01T00:00:02+00:00",
+}])
+def test_run_audit_keeps_execution_timing_separate_from_acknowledgment(tmp_path, timing):
+    result = publish_bundle(tmp_path / "profiles", {"source_id": "synthetic"}, {"summary.json": b"{}\n"})
+    before = datetime.now(timezone.utc)
+    path = record_run(tmp_path / "runs", {**result, **(timing or {})})
+    after = datetime.now(timezone.utc)
+    record = json.loads(Path(path).read_bytes())
+    assert record.get("started_at") == (timing["started_at"] if timing else None)
+    assert record.get("finished_at") == (timing["finished_at"] if timing else None)
+    assert before <= datetime.fromisoformat(record["recorded_at"]) <= after
+
+
+def test_failed_run_can_be_recorded_without_inventing_a_completed_bundle(tmp_path):
+    result = {"status": "failed", "profile_id": "synthetic-specification-id",
+              "error_type": "OSError", "error_message": "synthetic disk failure",
+              "started_at": "2020-01-01T00:00:00+00:00", "finished_at": "2020-01-01T00:00:01+00:00"}
+    try:
+        path = record_run(tmp_path / "runs", result)
+    except KeyError:
+        path = None
+    assert path is not None, "Failed runs have no completion manifest to hash"
+    record = json.loads(Path(path).read_bytes())
+    assert record["status"] == "failed"
+    assert record["error_type"] == "OSError"
+    assert record["error_message"] == "synthetic disk failure"
+    assert "manifest_path" not in record and "manifest_sha256" not in record
+    assert not (tmp_path / "profiles").exists()
 
 
 def test_manifest_records_logical_hash_and_row_count_for_jsonl(tmp_path):
