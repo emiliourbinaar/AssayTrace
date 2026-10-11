@@ -53,3 +53,10 @@ entries are test data and do not authenticate a release. The opt-in
 archive database and checks actual captured activity IDs against independent
 primary-key reads. It is skipped unless explicitly enabled. Passing that check
 establishes compatibility for the bounded slice, not scientific eligibility.
+
+`test_candidate_profile.py` composes authored source-shaped bundles, molecular
+examples and review snapshots. Its `human_confirmed` labels are synthetic test
+inputs, never real assay approvals. The tests exercise local provenance links,
+record exclusions, grouping quarantine, unknown review state, deterministic
+reconstruction and publication recovery. Their success is not ChEMBL source
+compatibility or scientific feasibility evidence.

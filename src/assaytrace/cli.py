@@ -9,14 +9,17 @@ from assaytrace.profile import numerical_profile, molecular_profile
 from assaytrace.chemistry import chemistry_contract
 from assaytrace.groups import build_groups
 from assaytrace.review import publish_reviews
+from assaytrace.pipeline import publish_candidate_profile, processing_specification
 
 
 def main(argv=None):
     parser = argparse.ArgumentParser(prog="assaytrace")
     commands = parser.add_subparsers(dest="command", required=True)
     profile = commands.add_parser("profile")
-    profile.add_argument("--source", type=Path, required=True)
-    profile.add_argument("--synthetic", action="store_true", required=True)
+    source = profile.add_mutually_exclusive_group(required=True)
+    source.add_argument("--source", type=Path)
+    source.add_argument("--inputs", type=Path)
+    profile.add_argument("--synthetic", action="store_true")
     profile.add_argument("--output", type=Path, required=True)
     review = commands.add_parser("review-import")
     review.add_argument("--selection", type=Path, required=True)
@@ -30,21 +33,21 @@ def main(argv=None):
                                  intervals=ledger["active_intervals"], stop=ledger.get("stop"))
         print(canonical_json(result).decode("utf-8"), end="")
         return 0
+    if args.inputs is not None:
+        result = publish_candidate_profile(args.inputs, args.output, synthetic=args.synthetic)
+        print(canonical_json(result).decode("utf-8"), end="")
+        return 0
+    if not args.synthetic:
+        parser.error("--source requires --synthetic; use --inputs for pinned release bundles")
     extracted = extract_synthetic(args.source)
     if extracted is None:
         return 1
     records, structures = extracted
     source_id = "synthetic:" + sha256(args.source.read_bytes()).hexdigest()
     activities, summary = numerical_profile(records, structures, source_id)
-    package = Path(__file__).parent
-    workspace = package.parent.parent
-    code_inventory = {str(path.relative_to(package)): sha256(path.read_bytes()).hexdigest()
-                      for path in sorted(package.glob("*.py"))}
     specification = {
         "source_id": source_id, "profile_contract": "synthetic-numeric-v1", "assessment": None,
-        "processing_code_sha256": sha256(canonical_json(code_inventory)).hexdigest(),
-        "environment_lock_sha256": sha256((workspace / "uv.lock").read_bytes()).hexdigest(),
-        "image_definition_sha256": sha256((workspace / "Dockerfile").read_bytes()).hexdigest(),
+        **processing_specification(),
         "chemistry_contract": chemistry_contract(),
         "chemistry_contract_sha256": sha256(canonical_json(chemistry_contract())).hexdigest(),
     }

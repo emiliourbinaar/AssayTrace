@@ -12,6 +12,57 @@ class BundleIntegrityError(ValueError):
     pass
 
 
+def read_bundle(manifest_path):
+    manifest_path = Path(manifest_path)
+    try:
+        manifest = json.loads(manifest_path.read_bytes())
+    except (OSError, ValueError) as error:
+        raise BundleIntegrityError("Missing or malformed manifest") from error
+    if (not isinstance(manifest, dict)
+            or not {"specification", "artifacts"} <= manifest.keys()
+            or not isinstance(manifest["artifacts"], dict)):
+        raise BundleIntegrityError("Malformed manifest structure")
+    if manifest.get("completion_contract") != "assaytrace-bundle-v1":
+        raise BundleIntegrityError("Unsupported completion contract")
+    profile_id = sha256(canonical_json(manifest["specification"])).hexdigest()
+    if manifest_path.parent.name != profile_id:
+        raise BundleIntegrityError("Stored specification differs from bundle identity")
+    for name in manifest["artifacts"]:
+        if not name or "/" in name or "\\" in name or name in {".", "..", "manifest.json"}:
+            raise BundleIntegrityError("Invalid stored artifact name")
+    if {path.name for path in manifest_path.parent.iterdir()} != set(manifest["artifacts"]) | {"manifest.json"}:
+        raise BundleIntegrityError("Stored artifact inventory differs")
+    artifacts = {}
+    for name, metadata in manifest["artifacts"].items():
+        required = {"size", "sha256"}
+        if name.endswith((".jsonl", ".json")):
+            required |= {"row_count", "logical_sha256", "equality"}
+        if not isinstance(metadata, dict) or not required <= metadata.keys():
+            raise BundleIntegrityError(f"Malformed artifact metadata: {name}")
+        try:
+            stored = (manifest_path.parent / name).read_bytes()
+        except OSError as error:
+            raise BundleIntegrityError(f"Stored artifact unreadable: {name}") from error
+        if len(stored) != metadata["size"] or sha256(stored).hexdigest() != metadata["sha256"]:
+            raise BundleIntegrityError(f"Stored artifact corrupt: {name}")
+        if name.endswith((".jsonl", ".json")):
+            try:
+                rows = ([json.loads(line) for line in stored.splitlines()]
+                        if name.endswith(".jsonl") else [json.loads(stored)])
+            except ValueError as error:
+                raise BundleIntegrityError(f"Malformed JSON artifact: {name}") from error
+            logical = b"".join(canonical_json(row) for row in rows)
+            if (stored != logical or metadata["row_count"] != len(rows)
+                    or metadata["logical_sha256"] != sha256(logical).hexdigest()
+                    or metadata["equality"] != "canonical_bytes"):
+                raise BundleIntegrityError(f"Stored logical metadata corrupt: {name}")
+        artifacts[name] = stored
+    return {"specification": manifest["specification"],
+            "profile_id": profile_id,
+            "artifacts": artifacts,
+            "validation_mode": "stored_integrity_only"}
+
+
 def record_run(root, result):
     root = Path(root)
     root.mkdir(parents=True, exist_ok=True)
@@ -52,40 +103,12 @@ def publish_bundle(root, specification, artifacts):
     profile_id = sha256(canonical_json(specification)).hexdigest()
     directory = Path(root) / profile_id
     if directory.exists():
-        try:
-            manifest = json.loads((directory / "manifest.json").read_bytes())
-        except (OSError, ValueError) as error:
-            raise BundleIntegrityError("Missing or malformed manifest") from error
-        if not isinstance(manifest, dict) or not {"specification", "artifacts"} <= manifest.keys():
-            raise BundleIntegrityError("Malformed manifest structure")
-        if manifest.get("completion_contract") != "assaytrace-bundle-v1":
-            raise BundleIntegrityError("Unsupported completion contract")
-        if canonical_json(manifest["specification"]) != canonical_json(specification):
+        existing = read_bundle(directory / "manifest.json")
+        if canonical_json(existing["specification"]) != canonical_json(specification):
             raise BundleIntegrityError("Stored specification differs")
-        if set(manifest["artifacts"]) != set(artifacts):
+        if set(existing["artifacts"]) != set(artifacts):
             raise BundleIntegrityError("Incoming artifact inventory differs")
-        if {path.name for path in directory.iterdir()} != set(artifacts) | {"manifest.json"}:
-            raise BundleIntegrityError("Stored artifact inventory differs")
-        for name, metadata in manifest["artifacts"].items():
-            required = {"size", "sha256"}
-            if name.endswith((".jsonl", ".json")):
-                required |= {"row_count", "logical_sha256", "equality"}
-            if not isinstance(metadata, dict) or not required <= metadata.keys():
-                raise BundleIntegrityError(f"Malformed artifact metadata: {name}")
-            try:
-                stored = (directory / name).read_bytes()
-            except FileNotFoundError as error:
-                raise BundleIntegrityError(f"Stored artifact missing: {name}") from error
-            if len(stored) != metadata["size"] or sha256(stored).hexdigest() != metadata["sha256"]:
-                raise BundleIntegrityError(f"Stored artifact corrupt: {name}")
-            if name.endswith((".jsonl", ".json")):
-                rows = ([json.loads(line) for line in stored.splitlines()]
-                        if name.endswith(".jsonl") else [json.loads(stored)])
-                logical = b"".join(canonical_json(row) for row in rows)
-                if (metadata["row_count"] != len(rows)
-                        or metadata["logical_sha256"] != sha256(logical).hexdigest()
-                        or metadata["equality"] != "canonical_bytes"):
-                    raise BundleIntegrityError(f"Stored logical metadata corrupt: {name}")
+        for name, stored in existing["artifacts"].items():
             if stored != artifacts[name]:
                 raise BundleIntegrityError(f"Incoming artifact differs: {name}")
         return {"profile_id": profile_id,

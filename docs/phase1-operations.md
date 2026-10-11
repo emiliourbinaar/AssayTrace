@@ -109,6 +109,47 @@ Ignored local evidence directories:
 
 Each directory has a completion manifest and byte/logical hashes. Extraction/run
 records are separate. These programmatic executions do not substitute for the
-remaining reproducible real-profile CLI and end-to-end acceptance checks. See
+remaining end-to-end phase acceptance checks. The local profile CLI added below
+now composes these stored inputs; it does not repeat extraction from SQLite. See
 [batch 001](reviews/phase1-batch-001.md) for full evidence paths and pending human
 decisions. Do not mark assistant proposals human-confirmed merely to run a profile.
+
+## Profile existing release bundles
+
+`config/phase1.json` references the four immutable candidate, molecular-context,
+frozen-selection and review manifests from the checkpoint. Paths are relative to
+the descriptor file, so the same descriptor works inside the reference container.
+The data files are local, ignored artifacts, not included in a fresh clone.
+
+```powershell
+docker run --rm --network none --mount "type=bind,source=$PWD,target=/workspace" -w /workspace -e PYTHONPATH=/workspace/src assaytrace-phase1:test python -m assaytrace profile --inputs config/phase1.json --output data/chembl37/reviewed-profiles
+```
+
+This verifies stored bundle inventories, hashes, canonical JSON, source identity,
+target/endpoint, context-to-candidate links and frozen review provenance. It then
+recomputes chemistry, full-context groups, record eligibility, repeat summaries
+and allocation/contrast diagnostics. Publication compares new output with any
+existing bundle under the same specification; changed output fails without
+overwriting it. Source records with equal values remain separate. Conflicted
+parent groups remain descriptive measurements when their other eligibility gates
+pass, but cannot enter allocation. Unconfirmed reviews never authorize records.
+
+On 2026-10-10 the user explicitly deferred review: keep batch 001 assistant-proposed.
+The descriptor therefore still references that snapshot. Empty reviewed counts
+are pending evidence, not a scientific failure verdict. `scientific_assessment`
+remains `not_performed`; no models are fitted. Updating review decisions requires
+an actual approved ledger and a newly published review snapshot, then changing
+the descriptor reference. Never edit the old bundle.
+
+`read_bundle` reports `stored_integrity_only`. The CLI actually recomputes the
+profile, and an identical rerun reports `reconstruction_compared`; that comparison
+is limited to reconstruction **from stored extraction artifacts**. Neither mode
+authenticates arbitrary source contents or proves independent archive extraction.
+The source ID is checked against the approved ChEMBL37 release hash, and input
+manifest hashes enter the profile specification. Synthetic bundle inputs require
+`--synthetic` and retain explicit `not_established` source compatibility.
+
+See [profile data dictionary](phase1-profile-data-dictionary.md) for output grains
+and interpretations. Acquisition and criterion-assessment CLI commands, fuller
+source relationship validation, independent archive re-extraction and the final
+scientific exit assessment remain pending; this is not Phase 1 acceptance.

@@ -339,3 +339,104 @@ unresolved. All are still **assistant-proposed**. The immutable imported snapsho
 is `review-state/reviews/4fdcbab9...`; it preserves 110 unreviewed entries and a
 265-second conservative elapsed-session audit charge. No full texts were consulted
 and no human-confirmed usable population or scientific exit verdict exists yet.
+
+### 2026-10-10 to 2026-10-11 — Stored-input profile integration and recovery
+
+Resumed the interrupted reader test from the actual workspace: its stub and test
+were present, and the first observed run failed at `assert result is not None`.
+The shell sandbox initially failed before process startup (`setup refresh had
+errors`); the authorized elevated route restored access. The approval-review
+service later hit a usage limit before the evidence-log update executed. On the
+next continuation, Docker Desktop was restarted and saved results were verified.
+No new dependencies, archive downloads, models or services were introduced.
+
+The user explicitly deferred batch 001 review: all ten decisions stay
+assistant-proposed. Neither the source ledger nor its immutable snapshot changed.
+
+Ruling: retain this execution ledger and the approved inline workflow rather than
+introducing a second bookkeeping tree — continuity with Windows/Docker execution
+— the cost is manual rather than helper-enforced progress tracking.
+
+Ruling: implement the plan's local `profile` interface with `--inputs` referencing
+four stored manifests — compose preserved source evidence with the scientific
+functions without repeating extraction — this proves reconstruction from stored
+inputs only. Independent archive extraction remains an acceptance obligation.
+
+Tests used the existing image without network:
+
+```powershell
+& "$env:LOCALAPPDATA\Programs\DockerDesktop\resources\bin\docker.exe" run --rm --network none --mount "type=bind,source=$PWD,target=/workspace" -w /workspace assaytrace-phase1:test python -m pytest tests/unit/test_bundle_reading.py -q
+& "$env:LOCALAPPDATA\Programs\DockerDesktop\resources\bin\docker.exe" run --rm --network none --mount "type=bind,source=$PWD,target=/workspace" -w /workspace assaytrace-phase1:test python -m pytest tests/integration/test_candidate_profile.py -q
+```
+
+Each new behavior was introduced separately; parameterized cases exercise the
+same contract. Observed red/green cycles:
+
+| Behavior | Observed red | Subsequent green |
+|---|---|---|
+| Read immutable bundle without claiming reconstruction | Stub returned `None` | 1 reader test |
+| Verify stored bytes and hash/count metadata | Six corruptions accepted | 7 reader tests; 41 including publication |
+| Reject malformed/incomplete manifests and inventory | Eleven cases accepted or errors unclassified | 18 reader tests; 52 including publication |
+| Enforce canonical bytes with a matching file hash | Two noncanonical payloads accepted; malformed JSON unclassified | 21 reader tests; 55 including publication |
+| Compose source records, chemistry, review and diagnostics | Profile stub returned `None` | 1 candidate integration test |
+| Preserve numeric exclusions without aborting or converting Ki | Four exclusion cases failed | 5 candidate tests |
+| Retain parent-conflicted measurements outside allocation | Quarantined identity reached allocation | 6 candidate tests; 38 including eligibility/evidence |
+| Deduplicate extraction encounters and sort published rows | Activity IDs were `[2,1,1]` | 7 candidate tests |
+| Wire `profile --inputs` with reconstruction comparison | CLI rejected missing `--source` | 8 candidate tests; 19 including original CLI |
+| Reject intact but incoherent input bundles | Nine provenance/scope mismatches accepted | 17 candidate tests; 28 including original CLI |
+| Keep synthetic inputs explicitly synthetic | Unlabelled synthetic data published as release input | 18 candidate tests |
+| Report unconfirmed/unreviewed populations | Two cases lacked eligible-population counts | 20 candidate tests; 31 including original CLI |
+
+With passing tests, publication was refactored to share stored-integrity checks,
+and both CLI paths share processing/environment provenance. Incoming-content
+comparison remains mandatory. Two additional integration tests exercise artifact
+write failure and lost acknowledgment after publication. Both passed with existing
+recovery behavior; no new production red/green cycle is claimed for them.
+Candidate integration suite: **22 passed in 2.43s**.
+
+The full offline command used the same Docker prefix with `python -m pytest -q`:
+**309 passed, 1 skipped in 22.01s**, exit 0. The skipped test is the opt-in source
+adapter test; it was not rerun because the adapter did not change. The reporter
+updated `.claude/tdd-guard/data/test.json`; automated write blocking remains
+unverified. Synthetic success is not source compatibility or scientific evidence.
+
+All five existing source/review/chemistry bundles passed `read_bundle` verification
+using a read-only mount. The real CLI used `config/phase1.json`, no network, a
+four-CPU cap and 4 GiB memory cap. Retained container
+`assaytrace-reviewed-profile-20261010` exited 0, running from
+`2026-10-11T01:44:20.01678691Z` to `2026-10-11T01:46:23.220615889Z`
+(October 10 locally). One in-run sample showed 99.68% CPU and 237.4 MiB memory;
+this is not a peak measurement. Chemistry warnings remain in the container log.
+No normalization policy was relaxed to suppress unresolved structures.
+
+The resulting profile ID is
+`c210854c12fff687fe1127124650f0e00708d344d27b49c0e3f5d45bc3cbf7af`,
+under `data/chembl37/reviewed-profiles/profiles/`. Manifest SHA-256:
+`03ad9102561998f1afb06a4afcf514165eb5f8142f68c91728a028a819baa05e`.
+It retains **10,079 source records**, **10 proposed assay decisions**, **110
+unreviewed selected assays**, **0 human confirmations**, and **0 eligible reviewed
+measurements/allocations**. Zero eligible counts reflect pending review, not
+scientific failure. `scientific_assessment` remains `not_performed`.
+
+Two full stored-input reconstructions then completed:
+
+| Container | Output scope | UTC start / finish | Exit |
+|---|---|---|---|
+| `assaytrace-reviewed-rerun-20261010` | Existing profile directory | 01:46:59.733341022 / 01:49:01.702244507 on October 11 | 0 |
+| `assaytrace-reviewed-validation-20261010` | Separate `data/chembl37/reviewed-profiles-validation` | 01:46:59.972192563 / 01:49:01.821060045 on October 11 | 0 |
+
+Both produced the same profile and manifest hashes. The first records
+`reused: true`, `validation_mode: reconstruction_compared`; the second published
+a new directory. On October 11, an independent PowerShell SHA-256 comparison
+verified all six files (`activities.jsonl`, `molecules.jsonl`, `groups.json`,
+`evidence.json`, `summary.json`, `manifest.json`) against the pre-rerun inventory
+and the separate reconstruction. Original last-write ticks also remained equal.
+These checks reconstruct from saved extraction artifacts, not from SQLite/archive.
+The shared reader also verified both completed bundles on October 11. Their
+activity output has exactly 10,079 unique release-qualified keys. Recomputed
+`molecules.jsonl` and `groups.json` match the September 26 chemistry checkpoint
+byte-for-byte, providing a further comparison against the earlier execution.
+
+Phase 1 remains incomplete: human assay review and scientific criteria, independent
+source re-extraction, fuller relationship/evidence contracts, acquisition and
+assessment CLI wiring, and accurate start/end/failure run audits remain pending.
