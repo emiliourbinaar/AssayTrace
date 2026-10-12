@@ -136,9 +136,11 @@ pass, but cannot enter allocation. Unconfirmed reviews never authorize records.
 Every record exception must resolve to a candidate activity in its reviewed
 assay; unknown or wrong-assay activity references abort profiling.
 
-On 2026-10-10 the user explicitly deferred review: keep batch 001 assistant-proposed.
-The descriptor therefore still references that snapshot. Empty reviewed counts
-are pending evidence, not a scientific failure verdict. `scientific_assessment`
+On 2026-10-10 the user explicitly deferred review. The user subsequently confirmed
+assay 2351073 only, with the full-methods limitation retained. The descriptor now
+references review snapshot `21ef698d...`; nine batch decisions remain proposed.
+Existing profiles retain their original inputs and counts. Empty reviewed counts
+in those earlier profiles are pending evidence, not a scientific failure verdict. `scientific_assessment`
 remains `not_performed`; no models are fitted. Updating review decisions requires
 an actual approved ledger and a newly published review snapshot, then changing
 the descriptor reference. Never edit the old bundle.

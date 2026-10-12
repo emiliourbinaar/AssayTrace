@@ -611,3 +611,30 @@ Assessment reconstruction validates this composition and explicit input contract
 It does not rerun chemistry or establish the scientific truth of the supplied
 criterion narratives. Human review, acquisition CLI wiring, broader error audits,
 remaining source/evidence checks and phase acceptance are still outstanding.
+
+### 2026-10-12 UTC — User confirmation of assay 2351073
+
+The user explicitly selected "1. Confirm compatible at assay level" after the
+single-assay walkthrough. The [confirmation record](reviews/phase1-batch-001-confirmations.md)
+preserves that scope and the limitation that full methods/supporting information
+have not been independently checked. This is October 11 in the user's timezone.
+
+Published the updated local ledger
+`data/chembl37/review-ledgers/batch-001-confirmed-2351073.json` using the existing
+`publish_reviews` function in the reference Docker image with networking disabled.
+The command completed with exit 0 and published review snapshot
+`21ef698d86b28d9060dc527d345fd2ab536a2617b29acef8ddb0a636ac658f78`.
+Run record: `data/chembl37/review-state/runs/62a8207fff164947893e1c7b8f6d7ce6.json`.
+
+Direct assertions and `read_bundle` verification confirmed exactly one
+human-confirmed assay (2351073), nine assistant-proposed decisions, 110 unreviewed
+selected assays, unchanged frozen selection bytes and unchanged original snapshot
+file hashes/timestamps. The other nine input decisions were compared unchanged
+against the original ledger. The updated confirmed decision retains source
+evidence references and adds the content hash of the confirmation note.
+
+`config/phase1.json` now points to the new review manifest. Existing profiles and
+interim assessments remain preserved; they have not been recomputed. No usable
+record count or revised criterion verdict follows from this administrative update.
+No application code changed, so a new red–green cycle or full test-suite rerun was
+not needed. This entry records actual import/integrity checks, not a new test count.

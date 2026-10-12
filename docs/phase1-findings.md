@@ -1,8 +1,13 @@
 # Phase 1 interim findings — 2026-10-11
 
 **Status: engineering progress; scientific assessment incomplete.** This is not
-a phase-exit approval request. The user deferred batch 001 review on October 10;
-all ten decisions remain assistant-proposed. No model has been fitted.
+a phase-exit approval request. The results below describe the October 11 profile
+before human confirmation. Subsequently, the user confirmed assay 2351073 as
+compatible at assay level, retaining the full-methods limitation; nine batch
+decisions remain assistant-proposed. The updated review snapshot is recorded in
+[batch 001](reviews/phase1-batch-001.md). Profiling has not yet been rerun with that
+snapshot, so the historical counts below must not be read as updated counts.
+No model has been fitted.
 
 The pinned ChEMBL37 human AChE/CHEMBL220 IC50 extraction contains 10,079 activity
 records and 8,372 candidate source molecules. These are candidate counts, not a
