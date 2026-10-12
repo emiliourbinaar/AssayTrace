@@ -638,3 +638,24 @@ interim assessments remain preserved; they have not been recomputed. No usable
 record count or revised criterion verdict follows from this administrative update.
 No application code changed, so a new red–green cycle or full test-suite rerun was
 not needed. This entry records actual import/integrity checks, not a new test count.
+
+### 2026-10-12 UTC — User confirms assay 902584 as unresolved
+
+The user selected "1. Confirm unresolved" after the single-assay explanation.
+The [separate confirmation note](reviews/phase1-batch-001-confirmation-902584.md)
+preserves the evidence gap and explicit distinction between confirming a
+disposition and approving eligibility. The earlier hashed confirmation note for
+2351073 was not edited.
+
+The existing `publish_reviews` function completed with exit 0 in the reference
+Docker image, networking disabled. It imported
+`data/chembl37/review-ledgers/batch-001-confirmed-2351073-902584.json` and produced
+review snapshot `d5bcdef7b33e1a0fb0b92446f6010c5117904966f3770a41f1e3902567d06aa5`.
+Run record: `data/chembl37/review-state/runs/de631a03e05e4c22b475d0e2d686d40c.json`.
+
+Assertions and `read_bundle` verified confirmed dispositions exactly
+`{902584: unresolved, 2351073: compatible}`, eight assistant proposals and 110
+unreviewed selected assays. All other input decisions, frozen selection bytes,
+and prior snapshot hashes/modification times were preserved. The active descriptor
+now points to the new snapshot. No application code changed or profiling ran;
+existing scientific counts and criterion assessments remain historical.

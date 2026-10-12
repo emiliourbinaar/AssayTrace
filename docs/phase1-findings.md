@@ -3,8 +3,8 @@
 **Status: engineering progress; scientific assessment incomplete.** This is not
 a phase-exit approval request. The results below describe the October 11 profile
 before human confirmation. Subsequently, the user confirmed assay 2351073 as
-compatible at assay level, retaining the full-methods limitation; nine batch
-decisions remain assistant-proposed. The updated review snapshot is recorded in
+compatible at assay level, retaining the full-methods limitation, and confirmed
+902584 as unresolved. Eight batch decisions remain assistant-proposed. The updated review snapshot is recorded in
 [batch 001](reviews/phase1-batch-001.md). Profiling has not yet been rerun with that
 snapshot, so the historical counts below must not be read as updated counts.
 No model has been fitted.

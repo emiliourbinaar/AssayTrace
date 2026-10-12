@@ -1,8 +1,10 @@
 # Phase 1 assay review — batch 001
 
-Status: **one assay confirmed; nine decisions remain assistant-proposed**.
+Status: **two dispositions confirmed; eight decisions remain assistant-proposed**.
 The user explicitly confirmed assay 2351073 as compatible at assay level, retaining
 the full-methods limitation. See the [confirmation record](phase1-batch-001-confirmations.md).
+The user also [confirmed 902584 as unresolved](phase1-batch-001-confirmation-902584.md);
+confirmation of uncertainty does not make that assay eligible.
 Updated 2026-10-12 UTC (October 11 local). Record eligibility has not yet been
 recomputed for the new review snapshot; no usable-population count is asserted here.
 
@@ -36,7 +38,7 @@ source, not a claim that its full text was read.
 
 | Order | Assay (source ID) | Proposal | Evidence and remaining limitation |
 |---|---|---|---|
-| H1 | CHEMBL3047076 (902584) | Unresolved | The assay description explicitly leaves enzyme origin unknown. Ellman's method is identified, but the associated 3D-QSAR study does not establish a common human enzyme preparation for the underlying records. [Document 68966](https://doi.org/10.1007/s00044-010-9516-x). Need original measurement provenance and enzyme origin. |
+| H1 | CHEMBL3047076 (902584) | Unresolved — human-confirmed | The assay description explicitly leaves enzyme origin unknown. Ellman's method is identified, but the associated 3D-QSAR study does not establish a common human enzyme preparation for the underlying records. [Document 68966](https://doi.org/10.1007/s00044-010-9516-x). Need original measurement provenance and enzyme origin. |
 | S1 | CHEMBL828047 (305601) | Unresolved | Description identifies AChE from human erythrocytes. It does not establish whether this is a cell-free preparation or intact cells, or provide sufficient method detail. The abstract supports human AChE inhibition but does not resolve preparation. [Document 21557](https://doi.org/10.1021/jm0496741). |
 | H2 | CHEMBL4770653 (2089390) | Unresolved | Ellman's method and substrate are described, but enzyme origin is explicitly unknown. The abstract does not resolve species/preparation. [Document 119819](https://doi.org/10.1016/j.ejmech.2020.112415). |
 | S2 | CHEMBL4329316 (1829442) | Unresolved | Human erythrocyte AChE and Ellman's method are described. Preparation versus intact cells remains unclear. The abstract's Torpedo crystallography is a different experiment and is not by itself evidence that this inhibition assay is nonhuman. [Document 110966](https://doi.org/10.1016/j.ejmech.2018.10.064). |
@@ -47,8 +49,8 @@ source, not a claim that its full text was read.
 | H5 | CHEMBL5362186 (2351073) | Compatible at assay level — human-confirmed | Description identifies recombinant human AChE, acetylthiocholine substrate, preincubation and Ellman's method. This supports the cell-free catalytic inhibition hypothesis. The paper's BChE focus does not negate its separately described AChE assay. Full methods/supporting information have not been independently checked. Pooling across methods is still for phase-exit assessment. [Document 127580](https://doi.org/10.1016/j.ejmech.2023.115301). |
 | S5 | CHEMBL1051649 (578532) | Unresolved | Ellman's method is identified, but inhibition described in human erythrocytes does not resolve intact-cell versus enzyme-preparation context. [Document 47755](https://doi.org/10.1021/jm900859q). |
 
-Remaining recommendation: review the whole-cell exclusion and the eight unresolved
-proposals individually. Assay 2351073 no longer needs confirmation. You may amend
+Remaining recommendation: review the whole-cell exclusion and the seven remaining
+unresolved proposals individually. Assays 2351073 and 902584 no longer need disposition confirmation. You may amend
 individual entries by assay ID. Confirming an unresolved
 entry confirms only its unresolved disposition, not its eligibility.
 
@@ -76,9 +78,15 @@ That original snapshot retains all ten `assistant_proposed` states unchanged.
 
 The [updated ledger](../../data/chembl37/review-ledgers/batch-001-confirmed-2351073.json)
 was published as [review snapshot 21ef698d](../../data/chembl37/review-state/reviews/21ef698d86b28d9060dc527d345fd2ab536a2617b29acef8ddb0a636ac658f78/reviews.json).
-Only 2351073 is `human_confirmed`; the other nine decisions and the frozen queue
-are unchanged. `config/phase1.json` now references this snapshot. Existing profiles
-and interim assessments still describe their original input snapshots.
+In that snapshot only 2351073 is `human_confirmed`; the other nine decisions and
+the frozen queue were unchanged.
+
+The subsequent [ledger confirming 902584 unresolved](../../data/chembl37/review-ledgers/batch-001-confirmed-2351073-902584.json)
+was published as [review snapshot d5bcdef7](../../data/chembl37/review-state/reviews/d5bcdef7b33e1a0fb0b92446f6010c5117904966f3770a41f1e3902567d06aa5/reviews.json).
+It preserves 2351073 as confirmed compatible and changes only 902584's confirmation
+state and confirmation provenance. Eight decisions remain proposed, and the frozen
+queue is unchanged. `config/phase1.json` now references this snapshot. Existing
+profiles and interim assessments still describe their original input snapshots.
 
 No decisive scientific blocker or budget exhaustion is declared. Human
 confirmation, broader review coverage, record-level eligibility, and criterion

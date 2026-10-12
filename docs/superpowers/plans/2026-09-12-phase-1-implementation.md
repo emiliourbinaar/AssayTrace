@@ -4,7 +4,7 @@
 
 **Status:** Approved for inline execution on 2026-09-12 with the user's bounded contract corrections incorporated below. As of 2026-10-11, the reference environment, pinned-source acquisition, bounded adapter check, full candidate extraction, chemistry/grouping, review import and stored-input profile CLI have execution evidence. Scientific review, remaining engineering contracts and phase acceptance are incomplete. Batch 001 remains assistant-proposed at the user's request. The task code blocks below remain requirements, not evidence of completion. See [execution evidence](../../phase1-validation.md) and [interim findings](../../phase1-findings.md).
 
-**Review update, 2026-10-12 UTC:** The user has now confirmed assay 2351073 only as compatible at assay level. Nine other batch 001 decisions remain assistant-proposed. The preceding dated status describes the earlier checkpoint; see the current batch review record for confirmation provenance.
+**Review update, 2026-10-12 UTC:** The user has confirmed assay 2351073 as compatible at assay level and assay 902584 as unresolved. Eight other batch 001 decisions remain assistant-proposed. The preceding dated status describes the earlier checkpoint; see the current batch review record for confirmation provenance.
 
 **Goal:** Produce reproducible, source-backed evidence for the three Phase 1 scientific exit criteria without building the later modeling or orchestration system.
 
