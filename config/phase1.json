@@ -2,5 +2,5 @@
   "candidate": "../data/chembl37/candidate-extracts/e660b9a6316572c4ae70db515c2934e39957df9c0c9b2e6e565e57d4d8a36794/manifest.json",
   "context": "../data/chembl37/molecule-contexts/95d096c1b22d1d03754f038b14faca52581bed351ce0959b3356cb37f5acc5ec/manifest.json",
   "selection": "../data/chembl37/review-selections/951ffa8535f29147f4a230fad3400bc0d03aa044ee9720523c09c89e9e99d49f/manifest.json",
-  "reviews": "../data/chembl37/review-state/reviews/d5bcdef7b33e1a0fb0b92446f6010c5117904966f3770a41f1e3902567d06aa5/manifest.json"
+  "reviews": "../data/chembl37/review-state/reviews/f162aca683021de16ed9680939226611641e6bd9acfc785af50d990df70dd54e/manifest.json"
 }

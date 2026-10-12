@@ -137,8 +137,8 @@ Every record exception must resolve to a candidate activity in its reviewed
 assay; unknown or wrong-assay activity references abort profiling.
 
 On 2026-10-10 the user explicitly deferred review. The user subsequently confirmed
-2351073 as compatible with the full-methods limitation retained, then 902584 as
-unresolved. The descriptor now references review snapshot `d5bcdef7...`; eight
+2351073 as compatible with the full-methods limitation retained, then 902584 and
+305601 as unresolved. The descriptor now references review snapshot `f162aca6...`; seven
 batch decisions remain proposed. Confirmed unresolved does not imply eligibility.
 Existing profiles retain their original inputs and counts. Empty reviewed counts
 in those earlier profiles are pending evidence, not a scientific failure verdict. `scientific_assessment`

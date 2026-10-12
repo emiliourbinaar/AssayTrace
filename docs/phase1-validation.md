@@ -659,3 +659,22 @@ unreviewed selected assays. All other input decisions, frozen selection bytes,
 and prior snapshot hashes/modification times were preserved. The active descriptor
 now points to the new snapshot. No application code changed or profiling ran;
 existing scientific counts and criterion assessments remain historical.
+
+### 2026-10-12 UTC — User confirms assay 305601 as unresolved
+
+The user selected "Opción 1" after the single-assay walkthrough: confirm unresolved
+and retain the preparation uncertainty. The [confirmation note](reviews/phase1-batch-001-confirmation-305601.md)
+preserves the exact response and its scope. Earlier hashed notes were not edited.
+
+The existing `publish_reviews` function completed with exit 0 in the reference
+Docker image with networking disabled. It imported
+`data/chembl37/review-ledgers/batch-001-confirmed-2351073-902584-305601.json` and
+published review snapshot `f162aca683021de16ed9680939226611641e6bd9acfc785af50d990df70dd54e`.
+Run record: `data/chembl37/review-state/runs/b9254ab206784e1787a4c10b5f419a0d.json`.
+
+Assertions and `read_bundle` verified exactly three confirmed dispositions:
+2351073 compatible, 902584 unresolved and 305601 unresolved; seven assistant
+proposals and 110 unreviewed selected assays remain. All other input decisions,
+frozen selection bytes and the prior snapshot hashes/modification times were
+unchanged. The active descriptor now references this snapshot. No application
+code changed, no new test-suite result is claimed, and profiling has not been rerun.
