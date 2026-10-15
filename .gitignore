@@ -1,7 +1,87 @@
+# Local source downloads, derived datasets, run evidence and scratch output.
+# Scientific reports and authored test fixtures remain versioned under docs/tests.
+/data/
+/artifacts/
+/logs/
+/tmp/
+/temp/
+*.log
+*.part
+*.sqlite
+*.sqlite3
+*.db
+*.db-wal
+*.db-shm
+*.db-journal
+*.sqlite-wal
+*.sqlite-shm
+*.sqlite-journal
+*.sqlite3-wal
+*.sqlite3-shm
+*.sqlite3-journal
+chembl_*.tar.gz
+
+# Python environments, bytecode and package build output.
 .venv/
+venv/
+env/
+ENV/
 __pycache__/
+*.py[cod]
+*$py.class
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# Test, coverage, lint and notebook caches.
 .pytest_cache/
-*.pyc
-.claude/tdd-guard/data/test.json
-data/
-artifacts/
+.mypy_cache/
+.ruff_cache/
+.hypothesis/
+.tox/
+.nox/
+.cache/
+.coverage
+.coverage.*
+htmlcov/
+coverage.xml
+junit.xml
+.ipynb_checkpoints/
+
+# Local environment values and credentials; sanitized templates may be shared.
+.env
+.env.*
+!.env.example
+!.env.template
+!.env.*.example
+.envrc
+/secrets/
+/credentials/
+.aws/
+.azure/
+.gcloud/
+*.key
+*.pem
+*.p12
+*.pfx
+id_rsa
+id_ed25519
+
+# Machine-local assistant state and the copied TDD Guard instructions.
+# AGENTS.md is project guidance and remains eligible for version control.
+/.claude/
+/.codex/
+/.agents/
+/tdd-guard_instructions.md
+
+# Local editor settings, backups and operating-system files.
+.vscode/
+.idea/
+.history/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+Desktop.ini
