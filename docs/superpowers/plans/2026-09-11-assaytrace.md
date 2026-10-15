@@ -31,7 +31,7 @@
 
 ### Observed workspace and environment
 
-On 2026-09-11, `C:\Users\emili\GitHub\AssayTrace` contained no files, including hidden files. `git status` reported that it was not a Git repository. No existing code or tests were available to assess.
+On 2026-09-11, `AssayTrace` contained no files, including hidden files. `git status` reported that it was not a Git repository. No existing code or tests were available to assess.
 
 Git, WSL, uv 0.11.8, and an MSYS2 Python 3.11.7 executable were discoverable. Docker was absent from PATH and from the two standard Docker Desktop executable locations checked. This does not prove it is absent everywhere. RAM inspection was denied; CPU allocation and Docker/WSL readiness remain unverified. C: reported approximately 272 GB free. Do not base the project on the MSYS2 Python installation; use Linux containers for the reproducible environment.
 
